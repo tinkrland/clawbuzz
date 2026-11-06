@@ -1,62 +1,64 @@
-# coverage: the head
-
-what main actually does, as of the commit that added this file. surface
-branches carry their own coverage docs; this one is only about the head, which
-is the part every surface depends on and the part that must not be hand waved.
+# coverage: text
 
 statuses: working (tested), partial (some paths), designed (shape agreed, code
 not written), planned (direction), not possible (in this approach).
 
-## persona as configuration
+## the six networks
 
-| piece | file | status | evidence |
+| network | ceiling (graphemes) | threads | status |
 | --- | --- | --- | --- |
-| manifest format (identity, brand, registers, memory, publishing, cadence) | `persona/schema.ts` | working | typed, defaults applied at load |
-| jsonc loader with full error list | `persona/loader.ts` | working | tests: comments, trailing commas, string content preserved |
-| validation: required branding, non empty never list, all seven registers, slug ids, 0..1 tone | `persona/loader.ts` | working | one error per problem with its path |
-| persona directory listing | `persona/loader.ts` | working | `listPersonas`, used by `tools/matrix.ts` |
-| reference persona | `personas/example.persona.jsonc` | working | loads, prints, drives every test |
+| x | 280 | yes, 12 parts | working: verified |
+| bluesky | 300 | yes, 12 parts | working: verified, facet offsets noted |
+| threads | 500 | yes, 10 parts | partial: ceiling marked unverified |
+| instagram | 2200 | no | working: verified, body links not clickable |
+| linkedin | 3000 | no | partial: ceiling marked unverified |
+| discord | 2000 | split across messages | working: verified |
 
-## how one person sounds the same everywhere
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| register per surface | `persona/registers.ts` | working | resolution and defaults tested |
-| per-platform overrides (x, bluesky, threads, instagram, linkedin, discord, tiktok, youtube, spotify) | `persona/registers.ts` | working | shallow replace, tested |
-| a disabled surface refuses to run | `core/surface.ts` | working | construction throws |
-| one tone to cue mapping (face, call voice, narrator, podcast) | `persona/voice_adapter.ts` | working | ported byte-identical from the prixie context branch, logic tested |
-| brief generation | `persona/brand.ts` | working | deterministic, tested for identity, register, refusals, disclosure, publishing |
-| brand sanity checks | `persona/brand.ts` | working | flags vague disclosures, vague refusals, live-with-approval contradiction |
-
-## continuity: who the persona has met
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| identity anchors, expanded platform set | `core/connections.ts` | working | normalization per platform, ambiguity to nobody, malformed config to no anchors |
-| scope declaration per surface | `core/memory_scope.ts` | working | anchor verdicts: anchored, owner, stranger, no_config, ambiguous |
-| provenance tags on writes | `core/memory_scope.ts` | working | `platform:<p>`, `connection:<id>` |
-| memory client | `core/memory.ts` | working | real retelldb calls when configured; honest no-op with a warn when not |
-| read rules (what carries, what drops) | retelldb `routing/scope.py` at v0.2.8 | working upstream, pinned here | vendored python from the prixie context work; this repo pins the tag |
-| python and typescript agreeing on normalization | both sides | partial | same rules written twice; there is no shared fixture test across the two languages yet |
-
-## publishing
+## composing
 
 | piece | status | evidence |
 | --- | --- | --- |
-| draft / scheduled / live per persona, approval required by default | working | tested, including the contradiction case |
-| credential gate per platform | working | missing token is a refusal with a reason |
-| actual posting adapters | designed | each surface branch owns its own; main never posts |
+| grapheme counting (segmented, not bytes or code units) | working | joined emoji and combining accents tested |
+| sentence splitting | working | punctuation driven |
+| word boundary splitting for one over long sentence | working | never splits inside a word |
+| one post when it fits, thread when it does not | working | order preserved, last part checked for length |
+| no thread on a network without thread support | working | refused with the reason, not truncated |
+| part ceilings | working | every part asserted under the limit |
+| hashtag policy (none, sparing, free) | working | inline tags removed, sparing keeps three |
+| emoji policy (none) | working | removed and counted, not silently rewritten |
+| over long against the register's sentence budget | working | warned, not truncated |
+| link policy per network | working | instagram warns that body links are not clickable |
+| alt text helper | working | required, cut at a word |
 
-## tooling
+## replies
+
+| piece | status | evidence |
+| --- | --- | --- |
+| inbound event shape | working | channel, handle, text, thread |
+| scope declaration (surface, persona, person) | working | anchored, owner, stranger tested |
+| privacy class (private room vs public thread) | working | discord resolves private |
+| memory recall scoped to the person | partial: real call, honest no-op when retelldb is unset |
+| withheld count surfaced | working | drops are reported, never hidden |
+| a reply that needs a thread is refused | working | that is a post with a target |
+| grounding note for the drafting side | working | known vs unknown person |
+
+## drafts and publishing
 
 | piece | status |
 | --- | --- |
-| `tools/sync-context.sh` | working (fetch main, sync persona/ and core/, install the retelldb pin) |
-| `tools/matrix.ts` | working (persona x surface x platform, generated from the manifest) |
-| test suite | working, 38 tests |
+| append only jsonl draft store | working |
+| approval as the only manual status change | working |
+| publishing gate: mode, approval, credential, adapter | working |
+| refusal recorded on the draft | working |
+| send adapters (six networks) | designed: none registered, every send refuses |
+| scheduling and queues | planned |
+| media attach (carousel, stills from the static surface) | planned |
 
-## surfaces
+## honest gaps
 
-not in this branch. each surface branch states its own status in its own
-`coverage.md`, and the only claim main makes about a surface is that it exists
-and whose mouth it is.
+- no adapter exists, so no network call has ever been made from this branch.
+  tests prove the gate refuses, and prove a fake adapter sends under a live
+  persona, which is the full path without a credential.
+- three ceilings are unverified and say so in code.
+- post length guidance from the register is a warning, not a truncation: cutting
+  a sentence to satisfy a style rule would silently change the claim.

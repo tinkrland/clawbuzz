@@ -1,104 +1,78 @@
-# clawbuzz
+# text
 
-an internet personality, not a content pipeline.
+the persona with a written voice: x, bluesky, threads, instagram, linkedin,
+discord.
 
-clawbuzz is one persona with seven ways of being present: in a meeting, on a
-stream, in a short clip, in a long video, in your ear, on a still frame, and in
-text. the same person in all seven, because identity, voice, brand, memory and
-publishing permission are declared once, in configuration, and every surface
-reads them.
+a post is the cheapest surface to get wrong. it is read in a second, it is
+permanent, and the ceiling that gets exceeded is the one that fails after
+review. so this branch is built around three unglamorous guarantees: lengths
+counted in graphemes, splitting only where a sentence ends, and the persona's
+own policies on hashtags and emoji enforced by the code rather than trusted to
+a prompt.
 
-the tools this is not: a ugc generator that stops at "make me a tiktok". ugc is
-one of seven surfaces here, and it is not first. what makes a personality is
-that the stream, the clip, the podcast and the post are recognisably the same
-person with the same point of view and the same memory of who it has met.
+## modules
 
-## one head, seven mouths
+| module | job |
+| --- | --- |
+| `server/channels.ts` | six networks, their ceilings, their thread rules, their confidence |
+| `server/compose.ts` | idea in, parts out: grapheme safe, sentence aligned, policy enforced |
+| `server/replies.ts` | who is being answered, what the persona remembers, what the scope withheld |
+| `server/drafts.ts` | an append only jsonl store. a draft is a file, not a pending post |
+| `server/publish.ts` | the gate: permission, credential, adapter. refusals are recorded |
+| `server/surface.ts` | the surface wired to the head |
+
+## the counting rule
+
+`graphemeLength` uses `Intl.Segmenter` with grapheme granularity, so a joined
+emoji is one character and `e` plus a combining accent is one character. byte
+lengths and code unit lengths are both wrong in ways that only show up at the
+last step, on someone else's network.
+
+bluesky is the clearest case: the limit is 300 graphemes, but links and mentions
+are byte indexed facets, so offset arithmetic runs on utf8 bytes while the
+ceiling runs on graphemes. the channel spec says so where the next person will
+look for it.
+
+## the thread rule
+
+a thread is not a format, it is a consequence. if the idea fits, the composer
+returns one post. if it does not, the parts break at sentence boundaries, in
+order, each under the ceiling. instagram and linkedin have no thread support
+here, so an over long idea there is refused rather than silently truncated,
+which is the honest failure.
+
+## the confidence rule
+
+each network carries `verified` and, when false, the exact check a human makes
+before publishing is enabled. three of the six are marked unverified on purpose.
+a wrong ceiling fails at upload, after review, which is the worst time to find
+out.
+
+## flow
 
 ```
-                     personas/<id>.persona.jsonc
-                    identity · brand · registers · memory
-                                  |
-                            persona/ + core/            <- main branch
-                                  |
-   +-------+-------+-------+-----+-----+-------+-------+
-   |       |       |       |           |       |       |
-meetings streaming short longform    audio  static   text
-   |       |       |       |           |       |       |
- zoom    twitch   tiktok  youtube    rss   insta    x, bsky,
- meet    kick     reels   long form  spotify  pinterest threads,
- teams   youtube  shorts  thumbnails apple    carousel  linkedin,
-         live                              stills    discord
+idea (from whatever the persona uses to think)
+   |
+compose: graphemes, sentences, hashtag policy, emoji policy
+   |
+draft on disk (jsonl)  ->  approval  ->  gate (permission + credential + adapter)
+                                              |
+                                          send, or a recorded refusal
 ```
 
-main is the head. each surface is a branch, with its own machines and its own
-coverage doc. a surface never edits `persona/` or `core/`: it syncs them from
-main with `tools/sync-context.sh`, so seven branches cannot grow seven slightly
-different definitions of who the persona is.
-
-## a surface, in six lines
-
-```ts
-import { loadPersona } from "./persona/loader.ts";
-import { defineSurface } from "./core/surface.ts";
-
-const persona = await loadPersona();                 // CLAWBUZZ_PERSONA
-const text = defineSurface("text", { persona, platform: "bluesky" });
-
-const brief = text.brief();                          // who, where, how it sounds, what it refuses
-const scope = text.scope("@someone");                // who is in front of it, from a real handle
-const notes = await text.recall("what we owe people"); // null when memory is unset, never invented
-```
-
-that is the whole contract. everything else a surface does (render a frame,
-join a call, publish a post) is the surface's own business, and none of it gets
-to restate the identity.
-
-## what makes it one person
-
-- **registers, in configuration.** how the persona sounds in a meeting is not
-  how it sounds in a tiktok, and both are written down per surface, plus
-  per-platform overrides (`bluesky is not linkedin`) in the same file.
-- **one voice mapping.** a single tone profile (warmth, sarcasm, playfulness,
-  confidence) maps to delivery cues in one module, so the face, the voice on a
-  call, the narrator and the podcast host are the same voice by construction.
-- **identity anchors.** people are known by handles across platforms
-  (`core/connections.ts`), so a second conversation is a continuation, and a
-  stranger stays a stranger instead of being guessed at.
-- **scoped memory.** every read and write declares which surface it is and who
-  is in front of it. the head (retelldb, pinned in `requirements.txt`) enforces
-  what may carry from a meeting into a public post, and reports what it withheld.
-- **one publishing permission.** draft, scheduled or live, per persona, with
-  owner approval required by default. a pipeline renders; a persona has accounts.
-
-## surfaces
-
-| surface | branch | what goes out | ported from |
-| --- | --- | --- | --- |
-| meetings | `meetings` | joins, attendance, captures, transcripts, receipts | the prixie proxy engine |
-| streaming | `streaming` | live video to twitch, kick, youtube live, obs bridge | the prixie video branch |
-| shortform | `shortform` | verticals: tiktok, reels, shorts, with ui safe zones | the prixie socmed branch |
-| longform | `longform` | youtube long form written as video, chapters, thumbnails | new, on the media core |
-| audio | `audio` | podcast episodes, chapters, transcripts, feed | new, on the voice core |
-| static | `static` | proskena stills and carousels, sized per platform | the prixie plate and set work |
-| text | `text` | x, bluesky, threads, instagram, linkedin, discord presence | new, on the brief and registers |
-
-status per surface lives in that branch's own `coverage.md`, and the head's
-status is in this branch's `coverage.md`. nothing here claims a live capability
-the code cannot show.
-
-## quick start
+## run
 
 ```sh
-cp .env.example .env            # CLAWBUZZ_PERSONA=example
-deno task test                  # 38 tests: manifest, registers, brief, scope, publishing
-deno task matrix                # print persona x surface x platform
+deno task test     # 70 tests: 38 on the head, 32 on this surface
 ```
 
-## docs
+## env
 
-- `repo.md` the branch map and the conventions
-- `coverage.md` what the head actually does, honestly
-- `roadmap.md` the direction, in order
-- `persona/readme.md` the manifest format
-- `core/readme.md` the runtime a mouth gets
+```
+CLAWBUZZ_PERSONA=example
+CLAWBUZZ_DRAFTS=./drafts.jsonl     # where drafts are appended
+CLAWBUZZ_CONNECTIONS=...           # identity anchors, so replies know who they answer
+```
+
+no network credential is read here yet. adapters are the next piece of work and
+none is registered, which is why every send in the tests is a refusal.
