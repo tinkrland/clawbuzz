@@ -1,50 +1,75 @@
-import { assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
+import { assertEquals, assertStringIncludes, assertThrows } from "jsr:@std/assert@1";
 import { loadPersonaFile } from "../persona/loader.ts";
-import { prepareClip, shortformSurface } from "../server/surface.ts";
-import { planClip } from "../server/clip.ts";
-import { clipSpec, specReadyToPublish } from "../server/clip_specs.ts";
+import { defineSurface, SURFACE_BRANCH, SURFACE_DEFAULT_PLATFORM } from "../core/surface.ts";
+import { parseConnections } from "../core/connections.ts";
+import { canPublishTo, publishingDecision } from "../core/publishing.ts";
 
 const EXAMPLE = new URL("../personas/example.persona.jsonc", import.meta.url).pathname;
 const persona = await loadPersonaFile(EXAMPLE);
 
-Deno.test("the surface speaks with the persona's shortform register", () => {
-  const surface = shortformSurface(persona, "reels");
-  assertEquals(surface.name, "shortform");
-  assertEquals(surface.platform, "reels");
-  assertStringIncludes(surface.brief(), "surface: shortform (clip)");
-  assertEquals(surface.register().hooks, true, "shortform asks for a hook");
-});
+const ANCHORS = parseConnections(JSON.stringify([
+  { id: "friend", label: "the friend", handles: { x: ["@friend"] } },
+]));
 
-Deno.test("the surface cannot be constructed on a persona that disabled it", () => {
-  const trimmed = { ...persona, surfaces: persona.surfaces.filter((s) => s !== "shortform") };
-  let threw = false;
-  try {
-    shortformSurface(trimmed as typeof persona, "tiktok");
-  } catch {
-    threw = true;
+Deno.test("a surface defaults to its own platform", () => {
+  const text = defineSurface("text", { persona });
+  assertEquals(text.platform, "x");
+  assertEquals(text.branch, "text");
+  for (const [surface, platform] of Object.entries(SURFACE_DEFAULT_PLATFORM)) {
+    assertEquals(typeof platform, "string", surface);
   }
-  assertEquals(threw, true);
+  assertEquals(SURFACE_BRANCH.static, "static");
 });
 
-Deno.test("prepareClip walks the gates and stops before any send", () => {
-  const plan = planClip({
-    idea: "one idea",
-    lines: ["your background is a lie", "this one is geometry", "that is why it never drifts"],
-  });
-  const ready = prepareClip(persona, plan, { platform: "tiktok", placement: { fitHeight: 0.78, anchorY: 0.08 } });
-  assertEquals(ready.job.frame.height, 1920);
-  assertEquals(ready.publishable.ok, false);
-  assertStringIncludes(ready.publishable.reason, "spec:");
-  assertStringIncludes(ready.publishable.reason, "publishing blocked");
+Deno.test("a surface refuses to run when the persona did not enable it", () => {
+  const trimmed = { ...persona, surfaces: persona.surfaces.filter((s) => s !== "streaming") };
+  assertThrows(() => defineSurface("streaming", { persona: trimmed as typeof persona }));
 });
 
-Deno.test("every network spec carries its confidence and its sizing", () => {
-  for (const platform of ["tiktok", "reels", "shorts"] as const) {
-    const spec = clipSpec(platform);
-    assertEquals(spec.target, "vertical");
-    assertEquals(spec.captionMaxChars > 0, true);
-    assertEquals(typeof spec.verified, "boolean");
-    if (!spec.verified) assertEquals(typeof spec.confirm, "string");
-  }
-  assertEquals(specReadyToPublish("tiktok").ready, false);
+Deno.test("the brief and the register agree with the manifest", () => {
+  const text = defineSurface("text", { persona, platform: "bluesky" });
+  assertStringIncludes(text.brief(), "platform: bluesky");
+  assertEquals(text.register().max_chars, 300);
+  assertEquals(text.register().register.startsWith("looser than x"), true);
+});
+
+Deno.test("memory scope is built from the handle the surface actually holds", () => {
+  const text = defineSurface("text", { persona, platform: "x", connections: ANCHORS });
+  assertEquals(text.scope().anchor, "stranger"); // anchors loaded, no handle held: honest stranger
+  const anchored = text.scope("friend");
+  assertEquals(anchored.connection_id, "friend");
+  assertEquals(anchored.persona_id, "example");
+});
+
+Deno.test("no retelldb configured means memory is off, not invented", async () => {
+  const text = defineSurface("text", { persona });
+  const result = await text.recall("what did we discuss");
+  assertEquals(result, null);
+  assertEquals(await text.remember("something worth keeping"), false);
+});
+
+Deno.test("publishing defaults to draft and blocks the send", () => {
+  const text = defineSurface("text", { persona });
+  const decision = text.publishing();
+  assertEquals(decision.mode, "draft");
+  assertEquals(decision.allowed(true), false);
+  assertEquals(canPublishTo(decision, { token: "t", approved: true }).ok, false);
+});
+
+Deno.test("scheduled publishing still honors per-artifact approval", () => {
+  const scheduled = { ...persona, publishing: { mode: "scheduled" as const, requires_owner_approval: true } };
+  const decision = publishingDecision(scheduled);
+  assertEquals(decision.allowed(false), false);
+  assertEquals(decision.allowed(true), true);
+  assertEquals(canPublishTo(decision, { token: null, approved: true }).ok, false);
+  assertEquals(canPublishTo(decision, { token: "tok", approved: true }).ok, true);
+});
+
+Deno.test("live without a credential is still a draft, and says so", () => {
+  const live = { ...persona, publishing: { mode: "live" as const, requires_owner_approval: false } };
+  const decision = publishingDecision(live);
+  assertEquals(decision.allowed(), true);
+  const gate = canPublishTo(decision, { token: null });
+  assertEquals(gate.ok, false);
+  assertStringIncludes(gate.reason, "no credential");
 });
