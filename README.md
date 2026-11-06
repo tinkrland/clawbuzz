@@ -1,104 +1,60 @@
-# clawbuzz
+# audio
 
-an internet personality, not a content pipeline.
+the persona in your ear: podcast episodes with chapters, a transcript, and a
+feed a directory will actually accept.
 
-clawbuzz is one persona with seven ways of being present: in a meeting, on a
-stream, in a short clip, in a long video, in your ear, on a still frame, and in
-text. the same person in all seven, because identity, voice, brand, memory and
-publishing permission are declared once, in configuration, and every surface
-reads them.
+audio is the only surface where the listener gives the whole attention, so
+structure is the product. an episode is planned before it is spoken: a cold
+open that makes the promise, three to five beats that keep it, a close that
+does not beg.
 
-the tools this is not: a ugc generator that stops at "make me a tiktok". ugc is
-one of seven surfaces here, and it is not first. what makes a personality is
-that the stream, the clip, the podcast and the post are recognisably the same
-person with the same point of view and the same memory of who it has met.
+## modules
 
-## one head, seven mouths
+| module | job |
+| --- | --- |
+| `audio/episode.ts` | the plan, its runtime arithmetic, and chapters from the segments |
+| `audio/tts.ts` | one narrow seam (text plus delivery cues in, a file and a duration out) and a fake |
+| `audio/transcript.ts` | timed lines, plain text with timestamps, and WebVTT |
+| `audio/feed.ts` | rss 2.0 with itunes, podcast index and chapters namespaces, validated |
+| `audio/surface.ts` | the whole pipeline, wired to the persona |
 
-```
-                     personas/<id>.persona.jsonc
-                    identity · brand · registers · memory
-                                  |
-                            persona/ + core/            <- main branch
-                                  |
-   +-------+-------+-------+-----+-----+-------+-------+
-   |       |       |       |           |       |       |
-meetings streaming short longform    audio  static   text
-   |       |       |       |           |       |       |
- zoom    twitch   tiktok  youtube    rss   insta    x, bsky,
- meet    kick     reels   long form  spotify  pinterest threads,
- teams   youtube  shorts  thumbnails apple    carousel  linkedin,
-         live                              stills    discord
-```
+## the runtime is arithmetic
 
-main is the head. each surface is a branch, with its own machines and its own
-coverage doc. a surface never edits `persona/` or `core/`: it syncs them from
-main with `tools/sync-context.sh`, so seven branches cannot grow seven slightly
-different definitions of who the persona is.
+speech runs about 2.4 words a second at an unhurried conversational pace, with a
+0.8s beat between segments. the plan therefore knows its own runtime before a
+second is recorded, and a script that overruns its target is refused rather than
+trimmed by a renderer nobody can audition.
 
-## a surface, in six lines
+chapters come out of the plan, in order, starting at zero, so a chapter that is
+not in the plan cannot appear in the file.
 
-```ts
-import { loadPersona } from "./persona/loader.ts";
-import { defineSurface } from "./core/surface.ts";
+## the feed is the artifact
 
-const persona = await loadPersona();                 // CLAWBUZZ_PERSONA
-const text = defineSurface("text", { persona, platform: "bluesky" });
+a podcast is not published by uploading a file, it is published by a feed. so
+the feed refuses to emit without the fields directories reject: owner email,
+cover, category, a self link, an enclosure with a byte length, and a duration.
+guids are stable and opaque, built from the persona, season and episode number,
+so editing a title never orphans an episode in someone's app.
 
-const brief = text.brief();                          // who, where, how it sounds, what it refuses
-const scope = text.scope("@someone");                // who is in front of it, from a real handle
-const notes = await text.recall("what we owe people"); // null when memory is unset, never invented
-```
+## the tts seam
 
-that is the whole contract. everything else a surface does (render a frame,
-join a call, publish a post) is the surface's own business, and none of it gets
-to restate the identity.
+one interface, no provider. `fakeTts` produces deterministic durations with
+`real: false`, so the whole pipeline is testable and nothing downstream can
+present a test as audio. adding a provider is registering an adapter with its
+credential environment variable, not touching the plan, the transcript or the
+feed.
 
-## what makes it one person
-
-- **registers, in configuration.** how the persona sounds in a meeting is not
-  how it sounds in a tiktok, and both are written down per surface, plus
-  per-platform overrides (`bluesky is not linkedin`) in the same file.
-- **one voice mapping.** a single tone profile (warmth, sarcasm, playfulness,
-  confidence) maps to delivery cues in one module, so the face, the voice on a
-  call, the narrator and the podcast host are the same voice by construction.
-- **identity anchors.** people are known by handles across platforms
-  (`core/connections.ts`), so a second conversation is a continuation, and a
-  stranger stays a stranger instead of being guessed at.
-- **scoped memory.** every read and write declares which surface it is and who
-  is in front of it. the head (retelldb, pinned in `requirements.txt`) enforces
-  what may carry from a meeting into a public post, and reports what it withheld.
-- **one publishing permission.** draft, scheduled or live, per persona, with
-  owner approval required by default. a pipeline renders; a persona has accounts.
-
-## surfaces
-
-| surface | branch | what goes out | ported from |
-| --- | --- | --- | --- |
-| meetings | `meetings` | joins, attendance, captures, transcripts, receipts | the prixie proxy engine |
-| streaming | `streaming` | live video to twitch, kick, youtube live, obs bridge | the prixie video branch |
-| shortform | `shortform` | verticals: tiktok, reels, shorts, with ui safe zones | the prixie socmed branch |
-| longform | `longform` | youtube long form written as video, chapters, thumbnails | new, on the media core |
-| audio | `audio` | podcast episodes, chapters, transcripts, feed | new, on the voice core |
-| static | `static` | proskena stills and carousels, sized per platform | the prixie plate and set work |
-| text | `text` | x, bluesky, threads, instagram, linkedin, discord presence | new, on the brief and registers |
-
-status per surface lives in that branch's own `coverage.md`, and the head's
-status is in this branch's `coverage.md`. nothing here claims a live capability
-the code cannot show.
-
-## quick start
+## run
 
 ```sh
-cp .env.example .env            # CLAWBUZZ_PERSONA=example
-deno task test                  # 38 tests: manifest, registers, brief, scope, publishing
-deno task matrix                # print persona x surface x platform
+deno task test     # 60 tests: 38 on the head, 22 on this surface
 ```
 
-## docs
+## env
 
-- `repo.md` the branch map and the conventions
-- `coverage.md` what the head actually does, honestly
-- `roadmap.md` the direction, in order
-- `persona/readme.md` the manifest format
-- `core/readme.md` the runtime a mouth gets
+```
+CLAWBUZZ_PERSONA=example
+```
+
+hosting (where audio and the cover live) and the directory credentials are not
+read here: they are deployment decisions and are not part of this surface.
