@@ -1,0 +1,8 @@
+{
+  "name": "clawbuzz-controlplane",
+  "version": "0.1.0",
+  "tasks": {
+    "test": "deno test --allow-env --allow-read",
+    "check": "deno check plane/*.ts"
+  }
+}
