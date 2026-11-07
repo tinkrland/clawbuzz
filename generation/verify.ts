@@ -8,6 +8,7 @@
 // says so out loud instead of looking tested.
 
 import { ADAPTERS, type Adapter } from "./adapters.ts";
+import { observedIds, readObservations, type Observation } from "./observations.ts";
 
 export interface AdapterCheck {
   adapter: string;
@@ -67,13 +68,20 @@ export interface VerificationReport {
   assumed: string[];
   // descriptions read from an aggregator page rather than the provider's own
   catalog_sourced: string[];
+  // adapters a real request has been accepted by, from the ledger
+  observed: string[];
 }
 
-export function verificationReport(adapters: Adapter[] = ADAPTERS): VerificationReport {
-  const checks = adapterChecks(adapters);
+export function verificationReport(
+  adapters: Adapter[] = ADAPTERS,
+  observations: Observation[] = readObservations(),
+): VerificationReport {
+  const observed = observedIds(observations);
+  const checks = adapterChecks(adapters).map((c) => ({ ...c, verified: c.verified || observed.includes(c.adapter) }));
   return {
     ok: checks.every((c) => c.problems.length === 0),
     checks,
+    observed,
     unverified: checks.filter((c) => !c.verified).map((c) => c.adapter),
     documented: adapters.filter((a) => a.evidence === "documented").map((a) => a.id),
     assumed: adapters.filter((a) => a.evidence === "assumed").map((a) => a.id),
