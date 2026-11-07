@@ -11,12 +11,13 @@ owns the answer to "what would she actually make", one folder per show.
 ```
 pilot/
   audio/podcast/holmes-at-home/
-  audio/music/stars-sprangled-banger/
+  audio/music/stars-spangled-banger/
   video/long-form/founding-fathers-show/
 ```
 
 every pilot has two files: `pilot.json`, the contract a checker can read, and
-`brief.md`, the reasoning a person can read. see `pilot/README.md` for the rules,
+`brief.md`, the reasoning a person can read. a pilot with guests also declares its
+cast, and a pilot that gets cut down declares what survives the cut. see `pilot/README.md` for the rules,
 including the one that matters most: a pilot does not ship until its fiction or
 satire frame is written down, because the frame is what makes the joke a joke.
 

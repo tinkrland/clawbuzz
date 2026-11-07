@@ -8,11 +8,13 @@
   "cadence": "weekly, tuesday",
   "fiction": {
     "kind": "invented_cases",
-    "disclosure": "Every case is invented. The show says so in the cold open, in the show notes, and in the episode title card: this is a story, nobody was hurt, no real case is being reopened."
+    "placement": "end_tag",
+    "disclosure": "The case was invented on purpose, for people who like this format, and the show says so in one fast breath at the end: made up, nobody was hurt, no real case is being reopened. Also in the show notes and the episode description, because a listener who stops early should still have been told."
   },
   "guardrails": [
     "no real case, real victim, real suspect or living person, at any point, including as a passing comparison",
     "no invented case may borrow enough detail from a real one to be identifiable",
+    "the title, thumbnail and description never imply a real case: the fiction tag lives there too, because the end tag only reaches people who finish",
     "police and forensic procedure stays generic and is never presented as a real account of a real force",
     "canon only: the 1887 to 1927 stories are public domain, the modern adaptations are not, and none of their inventions are borrowed",
     "the armchair is the constraint: the case is solved from letters, photographs and recordings, never by the narrator going somewhere and confronting somebody"
@@ -28,5 +30,6 @@
       "the reveal: the detail was the paint, and the paint was the alibi",
       "the epilogue: what the letter writer was actually asking for, which was never the case"
     ]
-  }
+  },
+  "why_invented": "true crime as a genre runs on other people's worst days, and the format itself is the thing worth keeping: the timeline, the suspects, the reveal. invented cases keep every part of that and take nobody's grief as raw material."
 }

@@ -26,13 +26,33 @@ refuses a disagreement:
 | `audio/music` | `audio` | same engine, arrangement instead of narration |
 | `video/long-form` | `longform` | written as video, chapters, 1080p targets |
 
-## the frame rule
+## the frame rule, and where the frame sits
 
-two of these three pilots would be irresponsible without their frame, and the
-third needs a rights note. so the checker requires a fiction disclosure and at
-least three guardrails, and refuses a pilot that lacks either.
+all three pilots need a frame, and the frame is not one thing: it has a placement,
+because where it sits decides whether it does any work.
 
-- a fictional case presented as a true crime episode needs to say, out loud and
-  every episode, that the case is invented.
-- a comedy about the founders needs the chyron, because the chyron is the
-  difference between a joke about history and a fake interview with a dead man.
+| placement | what it means | who |
+| --- | --- | --- |
+| `cold_open` | before the thing the listener came for | nothing here |
+| `end_tag` | one fast breath at the end, with the packaging carrying it too | holmes at home |
+| `on_screen_continuous` | on screen the whole time, plus the platform disclosure | the founding fathers show |
+| `stated_in_notes` | in the notes and the description, because the work itself is the disclosure | stars spangled banger |
+
+a photoreal likeness is never disclosed once and forgotten, which is why the sofa
+show's frame is continuous on screen and duplicated by the platform's synthetic
+content disclosure on every upload. an invented case can carry its tag at the end
+as long as the title, thumbnail and description never imply a real one, because
+the end tag only reaches people who finish.
+
+## cast, and the hard part of a show with guests
+
+a pilot with a cast declares every voice it has to keep apart: role, register and
+continuity, meaning what that voice has already been told and what it is still
+refusing to accept. the checker refuses two cast members who share a register,
+because that is exactly how six voices collapse into one narrator wearing hats.
+
+## repackaging
+
+a pilot that gets cut down declares where it goes and what survives the cut. the
+rule is required, not optional, because a clip is where a frame is most likely to
+be stripped, and a frame that leaves first is how a joke becomes a fake.

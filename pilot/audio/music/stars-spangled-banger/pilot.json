@@ -1,6 +1,6 @@
 {
-  "id": "stars-sprangled-banger",
-  "title": "Stars Sprangled Banger",
+  "id": "stars-spangled-banger",
+  "title": "Stars Spangled Banger",
   "vertical": "audio/music",
   "surface": "audio",
   "form": "music",
@@ -8,7 +8,8 @@
   "cadence": "fortnightly",
   "fiction": {
     "kind": "arrangement_experiment",
-    "disclosure": "The song is public domain and the arrangement is new. Every episode states the basis: words 1814, tune To Anacreon in Heaven, and the arrangement is not a recording of any existing performance."
+    "disclosure": "The song is public domain and the arrangement is new. Every episode states the basis: words 1814, tune To Anacreon in Heaven, and the arrangement is not a recording of any existing performance.",
+    "placement": "stated_in_notes"
   },
   "guardrails": [
     "no political endorsement, no campaign use, no implied statement on any living politician",

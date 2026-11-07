@@ -1,7 +1,6 @@
 # stars sprangled banger
 
-the folder name is spelled the way it was asked for. if the word should be
-"spangled", it is one rename and one line in the checker.
+spelled "spangled" now, per the correction.
 
 ## premise
 

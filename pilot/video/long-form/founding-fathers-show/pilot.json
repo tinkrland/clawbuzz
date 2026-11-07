@@ -1,32 +1,86 @@
 {
   "id": "founding-fathers-show",
-  "title": "The Founding Fathers Show",
+  "title": "The Fun Founding Fathers Show",
   "vertical": "video/long-form",
   "surface": "longform",
   "form": "long-form",
-  "format": "talk show on a sofa: host plus four recurring guests, one era per episode, 45 to 60 minutes, four segments (the greeting, the catch-up, the reaction, the closing question)",
+  "format": "talk show on a sofa: host, her assistant who does the explaining, and four founders as recurring guests. one era per episode, 45 to 60 minutes, four segments (the greeting, the catch-up, the reaction, the closing question)",
   "cadence": "monthly",
   "fiction": {
-    "kind": "satire_with_illustrated_likeness",
-    "disclosure": "The likeness is deliberate and openly absurd: illustrated caricature, one permanent chyron reading not a real interview, and the host says on camera that these are actors in a comedy about history. Nothing here is presented as authentic footage."
+    "kind": "photoreal_satire_with_likeness",
+    "placement": "on_screen_continuous",
+    "disclosure": "Photoreal likeness by design, and the frame rides on screen for the whole episode: a permanent chyron reading not a real interview, and the platform's altered or synthetic content disclosure on every upload. Nobody believes George Washington agreed to this; the show just never pretends he did."
   },
+  "cast": [
+    {
+      "id": "host",
+      "name": "the host",
+      "role": "runs the room, carries the comedy, keeps six people on the rails",
+      "register": "warm, fast, delighted by the mess, apologises to nobody for the format",
+      "continuity": "knows how the century turned out and is not going to say it all at once"
+    },
+    {
+      "id": "assistant",
+      "name": "her assistant",
+      "role": "tells them: the one who explains the era, sources every claim, and holds the timeline",
+      "register": "precise, unhurried, cites the document, quietly running out of patience",
+      "continuity": "keeps the source list and a running note of what each guest has already been told"
+    },
+    {
+      "id": "washington",
+      "name": "George Washington",
+      "role": "guest, and the one the others defer to whether or not he wants it",
+      "register": "formal, measured, faintly appalled by informality, takes the sofa arrangements seriously",
+      "continuity": "learns the size of the country before he learns anything else about the twentieth century"
+    },
+    {
+      "id": "jefferson",
+      "name": "Thomas Jefferson",
+      "role": "guest, the one who wants to write it down",
+      "register": "expansive, idealistic, self-contradicting mid-sentence, reaches for a pen",
+      "continuity": "keeps a notebook headed things I was wrong about, and the notebook keeps growing"
+    },
+    {
+      "id": "hamilton",
+      "name": "Alexander Hamilton",
+      "role": "guest, the one who asks what it cost and who paid",
+      "register": "fast, combative, numbers-first, treats every era as a balance sheet",
+      "continuity": "wants to know what replaced the assumption plan, and never quite accepts the answer"
+    },
+    {
+      "id": "franklin",
+      "name": "Benjamin Franklin",
+      "role": "guest, the one who asks how the machine works and who is sleeping with whom",
+      "register": "warm, ribald, practical, interested in the plumbing, the printing and the gossip",
+      "continuity": "collects inventions he did not get to see and rates them out of ten"
+    }
+  ],
   "guardrails": [
-    "illustrated or animated likeness only, never photoreal synthetic video of a real historical figure that could be mistaken for archival footage",
-    "no invented quotation is ever presented as authentic: a founder's position is grounded in his own writings with the source named, and where the host is extrapolating he says so in the line before",
-    "every historical claim carries a source in the episode's show notes",
-    "tragedies are explained, never mocked: the comedy is the guests' incomprehension of a century they missed, and the host states plainly what happened and to whom",
-    "no modern partisan framing put in a founder's mouth as though his own writings support it; where a modern analogy is made, it is named as the host's analogy",
-    "the guests stay dead: no episode pretends they have opinions on a living person's conduct beyond what the format's satire explicitly frames"
+    "photoreal is the format and the frame is what carries it: permanent chyron, the platform's synthetic content disclosure on every upload, and never a claim that any of this happened",
+    "no invented quotation is ever presented as authentic: a founder's position is grounded in his own writings with the source named, and where the assistant is extrapolating he says so in the line before",
+    "no photoreal likeness of a living person, and no founder given lines about a living politician's conduct",
+    "every historical claim carries a source in the episode's show notes, and each of the six registers stays distinct: the point of the show is that six voices never blur into one",
+    "tragedies are explained, never mocked: the comedy is the guests' incomprehension of a century they missed, and the assistant states plainly what happened and to whom",
+    "the slaveholding of the founding generation and the exclusions written into its documents are said plainly when they matter, never softened into a joke and never assigned to a single bad founder",
+    "no modern partisan framing put in a founder's mouth as though his own writings support it; where a modern analogy is made, it is named as the assistant's analogy"
+  ],
+  "repackaging": [
+    {
+      "surface": "shortform",
+      "what_survives": "the reaction segment: one founder's answer plus the host's face, 20 to 45 seconds, cut on the answer rather than the setup",
+      "rule": "a clip never runs without the chyron, because the frame has to survive the cut"
+    }
   ],
   "episode_zero": {
     "title": "The War to End All Wars, Explained to Men Who Started One",
     "running_time": "52 minutes",
     "beats": [
-      "the greeting: they arrive mid-argument from 1787, and the host has to explain what a camera is before anything else",
-      "the catch-up: 1914 to 1918 in nine minutes, archival stills, a map that fills in as the front moves",
-      "the reaction: each guest answers from his own writings, the host names the source, and at least one answer is a guess labelled as one",
-      "the disagreement: two of them take incompatible lessons from it, and nobody is corrected for the sake of the audience",
-      "the closing question: what would you have done in 1917, answered in character, then the chyron and the outro"
+      "the greeting: they arrive mid-argument from 1787, and the assistant has to explain what a camera is before anything else",
+      "the catch-up: 1914 to 1918 in nine minutes, archival stills, a map that fills in as the front moves, every claim sourced on screen as it lands",
+      "the reaction: each of the four answers from his own writings, the assistant names the source, and at least one answer is a guess labelled as one",
+      "the disagreement: Washington and Hamilton take incompatible lessons from it, and the host does not referee",
+      "the closing question: what would you have done in 1917, answered in character, then the chyron and the outro",
+      "the cut: the shortform edit takes one reaction and the host's face, with the chyron intact"
     ]
   }
 }

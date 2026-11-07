@@ -20,13 +20,31 @@ as a form of manners. the flat also gives the audio surface something it does no
 have yet: a recurring room with fixed props, which is the audio equivalent of a
 place plate.
 
-## the frame
+## why the cases are invented
 
-this is the whole risk of the show and it is cheap to get right. a fictional case
-told in true crime form can be mistaken for a real case, and a real case retold
-with invented details is worse than either. so the frame is stated out loud, every
-episode, in the cold open, in the notes, and in the title card: the case is
-invented, nobody was hurt, nothing is being reopened.
+true crime as a genre runs on other people's worst days. the format is genuinely
+good: the timeline, the suspects, the reveal, the voice that walks you through a
+closed room. what is rotten is the supply chain, where real grief becomes a
+season, and where the family of a real victim can meet the episode about them in
+a recommendation feed.
+
+so this show keeps the format and refuses the supply. every case is invented, on
+purpose, built to hit the same beats a listener already loves, which makes it
+entertainment without the critique: nobody's suffering is the raw material, no
+one is being contentified, and the show cannot be accused of monetising a
+tragedy because there is no tragedy behind it.
+
+## the frame, and where it sits
+
+one fast breath at the end, right after the epilogue: made up, nobody was hurt,
+nothing is being reopened. the end tag is deliberate. a cold open disclaimer is a
+wall in front of the thing the listener came for, and it also reads as an apology
+for the genre rather than a use of it.
+
+the end tag only reaches people who finish, so the packaging carries it too: the
+fiction line is in the episode description and the show notes, and the title and
+thumbnail never imply a real case. an honest show tells you on the way in and
+again on the way out.
 
 ## what a good episode does
 
@@ -37,7 +55,8 @@ resolves; the person does not entirely.
 ## guardrails in plain language
 
 no real cases, victims, suspects or living people, not even as a comparison the
-narrator makes in passing. invented cases stay far enough from real ones that a
+narrator makes in passing, and no invented case shaped closely enough that a
+listener with a search engine can find the real one it rhymes with. invented cases stay far enough from real ones that a
 listener with a search engine cannot identify anybody. procedure stays generic.
 the canon is public domain and the adaptations are not, so the inventions stay
 ours. and the armchair is the constraint: everything is solved from what arrived
