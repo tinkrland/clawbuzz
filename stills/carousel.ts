@@ -1,146 +1,101 @@
-// a carousel is a still sequence with an argument: the cover makes the
-// claim, the middle proves it, the close stops.
+// a carousel is a series with an argument: the cover makes the claim, the
+// middle proves it, the close stops.
 //
-// the failure mode of a carousel is padding. nine slides that each say a
-// little are worse than three that say something, so the rules here are
-// about subtraction: one idea per slide, a word ceiling, an alt text that
-// actually describes the frame, and no call to action the persona would not
-// make.
+// every slide shares one location and one magnification, because a carousel
+// that jumps rooms reads as five unrelated posts. only the composition moves,
+// which is what makes the sequence feel like one shoot instead of a folder.
 
-import type { RegisterSpec } from "../persona/schema.ts";
-import { target, type SocialTarget } from "../stage/sizes.ts";
-
-export interface SlidePlan {
-  // the one idea this slide carries
-  claim: string;
-  // what proves it, when the claim needs proving
-  evidence?: string;
-  // the description a screen reader gets. required, because a carousel that
-  // is only legible to sighted people is a broken carousel
-  alt: string;
-}
-
-export interface CarouselPlan {
-  // the cover line: the whole carousel in one sentence
-  cover: string;
-  slides: SlidePlan[];
-  close?: string;
-  target: string;
-}
-
-export interface CarouselSpec {
-  platform: "instagram" | "linkedin";
-  maxSlides: number;
-  sizeTarget: string;
-  // where the platform's own chrome sits, carried so text never lands under
-  // the dot indicator or the "swipe" affordance
-  chromeBottom: number;
-  verified: boolean;
-  confirm?: string;
-}
-
-export const CAROUSEL_SPECS: Record<string, CarouselSpec> = {
-  instagram: {
-    platform: "instagram",
-    maxSlides: 20,
-    sizeTarget: "portrait",
-    chromeBottom: 0.08,
-    verified: false,
-    confirm: "the slide ceiling has moved before; check it in the composer before scheduling",
-  },
-  linkedin: {
-    platform: "linkedin",
-    maxSlides: 20,
-    sizeTarget: "portrait",
-    chromeBottom: 0.05,
-    verified: false,
-    confirm: "document posts and native carousels differ; confirm which surface this is going to",
-  },
-};
+import { consistencyBlocks, consistencyPrompt, consistencySeed, type ConsistencyBlocks } from "../persona/consistency.ts";
+import type { PersonaManifest } from "../persona/schema.ts";
+import { frameFor, textBand, type Frame } from "./frames.ts";
+import { lockedDrift, type StillProvider, type StillPlan } from "./still.ts";
 
 export const SLIDE_WORD_CEILING = 18;
-export const MIN_SLIDES = 2;
+export const MAX_SLIDES = 10;
 
-export function carouselSpec(platform: string): CarouselSpec {
-  const spec = CAROUSEL_SPECS[platform];
-  if (!spec) throw new Error(`unknown carousel platform: ${platform} (known: ${Object.keys(CAROUSEL_SPECS).join(", ")})`);
-  return spec;
-}
-
-export function words(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-export interface CarouselCheck {
-  ok: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
-export function checkCarousel(plan: CarouselPlan, register: RegisterSpec, spec: CarouselSpec): CarouselCheck {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-
-  if (!plan.cover.trim()) errors.push("cover: required, it is the whole argument in one line");
-  if (plan.slides.length < MIN_SLIDES) errors.push(`slides: ${plan.slides.length}, a carousel is at least ${MIN_SLIDES}`);
-  if (plan.slides.length > spec.maxSlides) errors.push(`slides: ${plan.slides.length} is over the ${spec.platform} ceiling of ${spec.maxSlides}`);
-
-  for (const [i, slide] of plan.slides.entries()) {
-    if (!slide.claim.trim()) errors.push(`slide ${i + 1}: a claim is required`);
-    if (!slide.alt.trim()) errors.push(`slide ${i + 1}: alt text is required`);
-    if (words(slide.claim) > SLIDE_WORD_CEILING) {
-      errors.push(`slide ${i + 1}: ${words(slide.claim)} words, one idea is ${SLIDE_WORD_CEILING} or fewer`);
-    }
-    if (words(slide.alt) < 3) warnings.push(`slide ${i + 1}: alt text is thin, describe the frame`);
-  }
-
-  if (plan.close && register.cta === false) {
-    errors.push("close: this persona's static register carries no call to action");
-  }
-  if (register.emoji === "none") {
-    const all = [plan.cover, plan.close ?? "", ...plan.slides.map((s) => `${s.claim} ${s.evidence ?? ""}`)].join(" ");
-    if (/\p{Extended_Pictographic}/u.test(all)) errors.push("emoji: this register carries none");
-  }
-
-  return { ok: errors.length === 0, errors, warnings };
-}
-
-export interface CarouselSlide {
-  index: number;
+export interface Slide {
   claim: string;
   evidence?: string;
+  composition: string;
   alt: string;
-  // the frame this slide is authored at
-  target: SocialTarget;
-  // the band the dot indicator and swipe affordance own
-  chromeBottom: number;
 }
 
-export interface Carousel {
-  platform: CarouselSpec;
-  slides: CarouselSlide[];
-  cover: string;
-  close?: string;
+export interface CarouselRequest {
+  location: string;
+  magnification: string;
+  frameTarget: string;
+  slides: Slide[];
 }
 
-export function buildCarousel(plan: CarouselPlan, register: RegisterSpec, platform = "instagram"): Carousel {
-  const spec = carouselSpec(platform);
-  const check = checkCarousel(plan, register, spec);
-  if (!check.ok) {
-    throw new Error(`carousel refused\n  ${check.errors.join("\n  ")}`);
+export interface Problem {
+  where: string;
+  problem: string;
+}
+
+export function checkCarousel(req: CarouselRequest): Problem[] {
+  const problems: Problem[] = [];
+  if (req.slides.length < 2) problems.push({ where: "slides", problem: "a carousel of one is a post" });
+  if (req.slides.length > MAX_SLIDES) problems.push({ where: "slides", problem: `over ${MAX_SLIDES} slides: the tail is never read` });
+
+  req.slides.forEach((slide, i) => {
+    const words = `${slide.claim} ${slide.evidence ?? ""}`.trim().split(/\s+/).filter(Boolean);
+    if (!slide.claim.trim()) problems.push({ where: `slide ${i + 1}`, problem: "no claim: a slide with nothing to say costs a swipe" });
+    if (words.length > SLIDE_WORD_CEILING) {
+      problems.push({ where: `slide ${i + 1}`, problem: `${words.length} words, ceiling is ${SLIDE_WORD_CEILING}` });
+    }
+    if (!slide.alt.trim()) problems.push({ where: `slide ${i + 1}`, problem: "no alt text: half the audience gets nothing" });
+    if (!slide.composition.trim()) problems.push({ where: `slide ${i + 1}`, problem: "no composition: the model will centre it and every slide will look alike" });
+  });
+
+  const compositions = req.slides.map((s) => s.composition.trim().toLowerCase());
+  if (new Set(compositions).size !== compositions.length) {
+    problems.push({ where: "slides", problem: "duplicate composition: two slides framed the same read as one" });
   }
-  const social = target(spec.sizeTarget);
-  return {
-    platform: spec,
-    cover: plan.cover,
-    close: plan.close,
-    slides: plan.slides.map((slide, index) => ({
-      index,
-      claim: slide.claim,
-      evidence: slide.evidence,
-      alt: slide.alt,
-      target: social,
-      chromeBottom: spec.chromeBottom,
-    })),
-  };
+  return problems;
+}
+
+export interface SlidePlan {
+  index: number;
+  claim: string;
+  alt: string;
+  plan: StillPlan;
+}
+
+export function planCarousel(persona: PersonaManifest, req: CarouselRequest): SlidePlan[] {
+  const problems = checkCarousel(req);
+  if (problems.length) {
+    throw new Error(`carousel: ${problems.map((p) => `${p.where}: ${p.problem}`).join("; ")}`);
+  }
+  const frame = frameFor(req.frameTarget);
+  let reference: ConsistencyBlocks | null = null;
+  return req.slides.map((slide, index) => {
+    const scene = { location: req.location, magnification: req.magnification, composition: slide.composition };
+    const blocks = consistencyBlocks(persona, scene);
+    const plan: StillPlan = {
+      frameTarget: req.frameTarget,
+      frame,
+      band: textBand(frame),
+      blocks,
+      prompt: consistencyPrompt(persona, scene),
+      seed: consistencySeed(blocks),
+      drifted: reference ? lockedDrift(reference, blocks) : [],
+    };
+    reference = reference ?? blocks;
+    return { index, claim: slide.claim, alt: slide.alt, plan };
+  });
+}
+
+export async function generateCarousel(
+  provider: StillProvider,
+  slides: SlidePlan[],
+): Promise<{ uri: string; seed: number; alt: string }[]> {
+  const out: { uri: string; seed: number; alt: string }[] = [];
+  for (const slide of slides) {
+    if (slide.plan.drifted.length) {
+      throw new Error(`carousel: slide ${slide.index + 1} drifts in ${slide.plan.drifted.join(", ")}`);
+    }
+    const made = await provider.generate({ prompt: slide.plan.prompt, seed: slide.plan.seed, frame: slide.plan.frame });
+    out.push({ uri: made.uri, seed: slide.plan.seed, alt: slide.alt });
+  }
+  return out;
 }

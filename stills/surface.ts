@@ -1,50 +1,46 @@
 // the static surface, wired to the head.
 //
-// a still is the cheapest thing a personality can post and the easiest to
-// get wrong: one frame carries the whole idea, so the frame has to be
-// authored rather than generated, and the words have to be few.
+// a still is generated, so this surface's job is to hold the ask steady: one
+// frame, four consistencies, a seed that survives a re-run, and a receipt that
+// says which model made which frame.
 
-import { loadPersona } from "../persona/loader.ts";
 import { defineSurface, type Surface } from "../core/surface.ts";
-import { canPublishTo } from "../core/publishing.ts";
 import type { PersonaManifest } from "../persona/schema.ts";
-import { stillJob, type StillJob, type StillRequest } from "./still.ts";
-import { buildCarousel, type Carousel, type CarouselPlan } from "./carousel.ts";
+import { planStill, type StillPlan, type StillProvider, type StillRequest } from "./still.ts";
+import { checkCarousel, generateCarousel, planCarousel, type CarouselRequest } from "./carousel.ts";
 
 export function staticSurface(persona: PersonaManifest, platform = "instagram"): Surface {
   return defineSurface("static", { persona, platform });
 }
 
-export interface PreparedStill {
-  job: StillJob;
-  surface: Surface;
-  publishable: { ok: boolean; reason: string };
+export function prepareStill(persona: PersonaManifest, req: StillRequest): StillPlan {
+  return planStill(persona, req);
 }
 
-export function prepareStill(persona: PersonaManifest, request: StillRequest): PreparedStill {
-  const surface = staticSurface(persona, request.target === "pin" ? "pinterest" : "instagram");
-  const job = stillJob(request);
-  const gate = canPublishTo(surface.publishing(), { token: null, approved: false });
-  return { job, surface, publishable: { ok: gate.ok, reason: gate.reason } };
+export function prepareCarousel(persona: PersonaManifest, req: CarouselRequest) {
+  return planCarousel(persona, req);
 }
 
-export interface PreparedCarousel {
-  carousel: Carousel;
-  surface: Surface;
-  publishable: { ok: boolean; reason: string };
+export interface StillOutput {
+  uri: string;
+  seed: number;
+  provider: string;
+  prompt: string;
 }
 
-export function prepareCarousel(
+export async function makeStill(
   persona: PersonaManifest,
-  plan: CarouselPlan,
-  platform = "instagram",
-): PreparedCarousel {
-  const surface = staticSurface(persona, platform);
-  const carousel = buildCarousel(plan, surface.register(), platform);
-  const gate = canPublishTo(surface.publishing(), { token: null, approved: false });
-  return { carousel, surface, publishable: { ok: gate.ok, reason: gate.reason } };
+  req: StillRequest,
+  providers: StillProvider[],
+): Promise<StillOutput> {
+  const plan = planStill(persona, req);
+  const provider = providers[0];
+  if (!provider) {
+    throw new Error("static: no still provider configured, so the frame stays a plan");
+  }
+  const receipt = await provider.generate({ prompt: plan.prompt, seed: plan.seed, frame: plan.frame });
+  return { uri: receipt.uri, seed: plan.seed, provider: provider.name, prompt: plan.prompt };
 }
 
-export async function currentSurface(platform = "instagram", personaId?: string): Promise<Surface> {
-  return staticSurface(await loadPersona(personaId), platform);
-}
+export { checkCarousel, generateCarousel, planCarousel };
+export type { CarouselRequest, StillProvider, StillRequest };

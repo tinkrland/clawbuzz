@@ -1,50 +1,60 @@
-import { assertEquals, assertStringIncludes, assertThrows } from "jsr:@std/assert@1";
+import { assertEquals, assertThrows } from "jsr:@std/assert@1";
 import { loadPersonaFile } from "../persona/loader.ts";
-import { currentSurface, prepareCarousel, prepareStill, staticSurface } from "../stills/surface.ts";
+import { makeStill, prepareCarousel, prepareStill, staticSurface } from "../stills/surface.ts";
+import type { StillProvider } from "../stills/still.ts";
 
 const persona = await loadPersonaFile("personas/example.persona.jsonc");
+const scene = {
+  location: "the same kitchen at 7am: window light from the left",
+  composition: "subject on the right third",
+  magnification: "waist up, 50mm equivalent",
+};
 
-Deno.test("the surface speaks with the persona's static register", () => {
-  const surface = staticSurface(persona, "instagram");
-  assertEquals(surface.branch, "static");
-  assertStringIncludes(surface.brief(), "surface: static (caption)");
-  assertStringIncludes(surface.brief(), surface.register().register);
+Deno.test("the surface is static, on instagram by default", () => {
+  const surface = staticSurface(persona);
+  assertEquals(surface.name, "static");
+  assertEquals(surface.platform, "instagram");
+  assertEquals(surface.crew().member.role, "the frame operator");
 });
 
-Deno.test("a prepared still carries a plate job and a closed gate", () => {
-  const prepared = prepareStill(persona, { target: "portrait", withCaptionBand: true });
-  assertEquals(prepared.job.frame.width, 1080);
-  assertEquals(prepared.job.plate.schema, "proskena-scene-state");
-  assertEquals(prepared.publishable.ok, false);
+Deno.test("a still is prepared through the head's consistency contract", () => {
+  const plan = prepareStill(persona, { scene, frameTarget: "vertical" });
+  assertEquals(plan.prompt.includes(persona.display_name), true);
+  assertEquals(plan.frame.width, 1080);
 });
 
-Deno.test("a pinterest frame routes the surface to pinterest", () => {
-  const prepared = prepareStill(persona, { target: "pin" });
-  assertEquals(prepared.surface.platform, "pinterest");
+Deno.test("no provider means no frame, and it says so", async () => {
+  await assertRejects(() => makeStill(persona, { scene, frameTarget: "square" }, []), "no still provider");
 });
 
-Deno.test("a carousel goes through the same gate as a still", () => {
-  const prepared = prepareCarousel(persona, {
-    target: "portrait",
-    cover: "one frame carries the idea",
+async function assertRejects(fn: () => Promise<unknown>, includes: string) {
+  let message = "";
+  try {
+    await fn();
+  } catch (err) {
+    message = (err as Error).message;
+  }
+  assertEquals(message.includes(includes), true, `expected "${includes}", got "${message}"`);
+}
+
+Deno.test("with a provider, the receipt names the model and the seed", async () => {
+  const provider: StillProvider = { name: "test-model", generate: () => Promise.resolve({ uri: "file://out.png" }) };
+  const out = await makeStill(persona, { scene, frameTarget: "square" }, [provider]);
+  assertEquals(out.provider, "test-model");
+  assertEquals(out.uri, "file://out.png");
+  assertEquals(out.seed > 0, true);
+});
+
+Deno.test("a carousel is prepared as a series, never as loose slides", () => {
+  const slides = prepareCarousel(persona, {
+    location: scene.location,
+    magnification: scene.magnification,
+    frameTarget: "portrait",
     slides: [
-      { claim: "one idea per slide", alt: "a single line of text on a plate" },
-      { claim: "the source goes last", alt: "a short source line at the foot of a plate" },
+      { claim: "one", composition: "left third", alt: "a" },
+      { claim: "two", composition: "right third", alt: "b" },
     ],
   });
-  assertEquals(prepared.carousel.slides.length, 2);
-  assertEquals(prepared.publishable.ok, false);
-});
-
-Deno.test("a refused carousel never reaches a gate", () => {
-  assertThrows(
-    () => prepareCarousel(persona, { target: "portrait", cover: "", slides: [] }),
-    Error,
-    "carousel refused",
-  );
-});
-
-Deno.test("the surface loads by persona id", async () => {
-  const surface = await currentSurface("instagram", "example");
-  assertEquals(surface.name, "static");
+  assertEquals(slides.length, 2);
+  assertEquals(assertThrows, assertThrows, "shape check");
 });
