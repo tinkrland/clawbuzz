@@ -20,6 +20,9 @@ export interface Connector {
 }
 
 export const CONNECTORS: Connector[] = [
+  // a podcast is distributed by a feed, not an api: there is no credential to
+  // hold, the feed url is the connector.
+  { platform: "spotify", surface: "audio", api: "feed", env: [], verified: true, note: "directories read the rss feed; no credential" },
   { platform: "tiktok", surface: "shortform", api: "oauth", env: ["CLAWBUZZ_TIKTOK_CLIENT_KEY", "CLAWBUZZ_TIKTOK_CLIENT_SECRET"], verified: false, note: "content posting api needs an app review before a third party can publish" },
   { platform: "instagram", surface: "shortform", api: "oauth", env: ["CLAWBUZZ_META_APP_ID", "CLAWBUZZ_META_APP_SECRET"], verified: false, note: "reels publish through the graph api, business account required" },
   { platform: "youtube", surface: "shortform", api: "oauth", env: ["CLAWBUZZ_YOUTUBE_OAUTH_CLIENT_ID"], verified: true, note: "shorts upload is the same data api upload endpoint" },

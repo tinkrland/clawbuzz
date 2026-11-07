@@ -42,3 +42,21 @@ persona without that flow is refused. nothing is guessed.
   against the documented request shape.
 - the surface roster is declared here and pinned: a sync check against the head's
   manifest is the designed fix, not built yet.
+
+## the check
+
+the roster is pinned here on purpose: an orphan branch cannot import the head. the cost of pinning is drift, and drift is silent until work is routed to a lane the persona does not have.
+
+`tools/check-roster.ts` reads every `*.persona.jsonc`, compares it to the roster in both directions, and exits non-zero when they disagree:
+
+- a surface the plane routes to that the persona never enabled
+- a surface the persona enabled that the plane has no lane for
+- a platform the persona registers a voice for with no connector anywhere
+
+run it against the head before a deploy:
+
+```
+deno run --allow-env --allow-read tools/check-roster.ts ../personas
+```
+
+its first run found one: the example persona registers spotify, and the plane had no connector for it. the fix was the honest one, a feed connector with no credential, because a podcast is distributed by a feed and not by an api.

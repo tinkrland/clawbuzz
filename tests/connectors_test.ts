@@ -28,7 +28,9 @@ Deno.test("credentials are named, and a missing one is reported by name", () => 
 });
 
 Deno.test("ready is computed, never assumed", () => {
-  assertEquals(readyConnectors(() => undefined), []);
+  // a feed connector holds no credential: the feed url is the connector, so it
+  // is ready in an environment where nothing is set. everything else waits.
+  assertEquals(readyConnectors(() => undefined).map((c) => c.platform), ["spotify"]);
   const all = readyConnectors(() => "set");
   assertEquals(all.length, CONNECTORS.length);
 });

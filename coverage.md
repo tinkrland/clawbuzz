@@ -9,3 +9,4 @@
 | langflow runner | working (seam) | documented run api, key from env, tested with an injected fetch, no live instance called |
 | head manifest agreement | designed | the roster is pinned here; a check against the persona manifest is the fix |
 | publishing | not here | surfaces own their platform clients |
+| roster check (`plane/roster.ts`, `tools/check-roster.ts`) | working | compares the plane to real manifests in both directions, exits non-zero on drift, 8 tests |

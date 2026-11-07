@@ -47,5 +47,5 @@ Deno.test("the operator roster lists platforms per surface", () => {
   const roster = rosterSummary();
   assertEquals(roster.length, 7);
   assertEquals(roster.find((r) => r.surface === "streaming")?.platforms.sort(), ["kick", "twitch"]);
-  assertEquals(roster.find((r) => r.surface === "audio")?.platforms, ["rss"]);
+  assertEquals(roster.find((r) => r.surface === "audio")?.platforms.sort(), ["rss", "spotify"]);
 });
