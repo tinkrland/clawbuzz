@@ -162,3 +162,15 @@ character reference + place plates + axis prompt  ->  reference to video  ->  cl
 ```
 
 this is the 2026 practice, not an invention: reference kits, several wide plates per location reused as structure, wardrobe treated as its own asset.
+
+## what an adapter check can say
+
+`tools/verify-adapters.ts` checks the descriptions, not the models: does the
+adapter accept a role that can carry identity, is its reference ceiling at least
+the smallest real kit (the person plus one wide plate), is the licence written
+down. those are internal claims, and a violation is a bug.
+
+what it cannot say is whether the model behaves that way. so every adapter ships
+`verified: false` and the tool prints them under "not yet observed", because a
+model nobody has run is unproven rather than passing. the day one is run, its
+flag flips with the run recorded.

@@ -67,3 +67,4 @@ and whose mouth it is.
 | places (`persona/places.ts`) | working | recurring places need a wide plate and at least two, invariants + light required |
 | shot (`persona/shot.ts`) | working | four axes plus wardrobe, seed includes the outfit, drift named per axis |
 | generation adapters (`generation/adapters.ts`) | designed | reference assembly and refusal logic tested; no model is called, no adapter verified |
+| adapter definition checks (`generation/verify.ts`) | working | identity carrier, kit ceiling, declared licence, honest unverified list; 5 tests |
