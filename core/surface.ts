@@ -9,6 +9,7 @@
 // brief(), register(), voiceStyle(), scope(), recall(), remember().
 
 import type { PersonaManifest, SurfaceName } from "../persona/schema.ts";
+import { crewFor, type ResolvedCrew } from "../persona/crew.ts";
 import { resolveRegister, type ResolvedRegister } from "../persona/registers.ts";
 import type { Connection } from "./connections.ts";
 import type { BuiltScope } from "./memory_scope.ts";
@@ -58,6 +59,8 @@ export interface Surface {
   platform: string;
   persona: PersonaManifest;
   register(): ResolvedRegister;
+  // the operator for this vertical: role, focus, playbooks, escalation
+  crew(): ResolvedCrew;
   brief(): string;
   voiceStyle(): VoiceStyle;
   publishing(): PersonaPublishDecision;
@@ -94,6 +97,7 @@ export function defineSurface(name: SurfaceName, opts: SurfaceOptions): Surface 
     platform,
     persona,
     register: () => resolveRegister(persona, name, platform),
+    crew: () => crewFor(persona, name),
     brief: () => personaBrief(persona, { surface: name, platform }),
     voiceStyle: () => voiceStyleForSurface(persona, name),
     publishing: () => publishingDecision(persona),
