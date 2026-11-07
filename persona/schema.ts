@@ -125,11 +125,38 @@ export interface PersonaManifest {
   voice: PersonaVoice;
   memory: PersonaMemory;
   surfaces: SurfaceName[];
+  // the crew: one operator per vertical. the persona is one identity, but the
+  // agent handling a podcast is not the agent handling a meeting. a crew
+  // member adds a specialisation on top of the shared identity; it can never
+  // replace it.
+  crew?: Partial<Record<SurfaceName, CrewMember>>;
   publishing?: Publishing;
   cadence?: Cadence;
   // schema version, so a manifest written today is still loadable when
   // the format grows. bump on breaking change only.
   manifest_version?: number;
+}
+
+export interface CrewMember {
+  // what this operator is for, in one line
+  role: string;
+  // the niche it is actually good at: the things it reads, watches and
+  // practises when nobody is asking it for anything
+  focus: string[];
+  // named playbooks and tools this operator is trusted with. the surface
+  // branch owns the code; this is the allowance list.
+  skills?: string[];
+  // what it may do alone, and what it climbs the ladder for
+  autonomy?: string;
+  // a delivery register override, when this vertical has a house style the
+  // surface register does not capture
+  register_notes?: string;
+  // where its taste comes from: the corpus it is tuned against. declared,
+  // because an operator with no sources is a vibe.
+  trains_on?: string[];
+  // when this operator must hand back to the owner, even when its autonomy
+  // would allow it to continue
+  escalate_to_owner?: string[];
 }
 
 export const MANIFEST_VERSION = 1;
