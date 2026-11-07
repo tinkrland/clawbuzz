@@ -1,62 +1,40 @@
-# coverage: the head
+# coverage: meetings
 
-what main actually does, as of the commit that added this file. surface
-branches carry their own coverage docs; this one is only about the head, which
-is the part every surface depends on and the part that must not be hand waved.
+honest status for this branch. the engine is a port; the head wiring is new.
 
-statuses: working (tested), partial (some paths), designed (shape agreed, code
-not written), planned (direction), not possible (in this approach).
+## the engine
 
-## persona as configuration
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| manifest format (identity, brand, registers, memory, publishing, cadence) | `persona/schema.ts` | working | typed, defaults applied at load |
-| jsonc loader with full error list | `persona/loader.ts` | working | tests: comments, trailing commas, string content preserved |
-| validation: required branding, non empty never list, all seven registers, slug ids, 0..1 tone | `persona/loader.ts` | working | one error per problem with its path |
-| persona directory listing | `persona/loader.ts` | working | `listPersonas`, used by `tools/matrix.ts` |
-| reference persona | `personas/example.persona.jsonc` | working | loads, prints, drives every test |
-
-## how one person sounds the same everywhere
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| register per surface | `persona/registers.ts` | working | resolution and defaults tested |
-| per-platform overrides (x, bluesky, threads, instagram, linkedin, discord, tiktok, youtube, spotify) | `persona/registers.ts` | working | shallow replace, tested |
-| a disabled surface refuses to run | `core/surface.ts` | working | construction throws |
-| one tone to cue mapping (face, call voice, narrator, podcast) | `persona/voice_adapter.ts` | working | ported byte-identical from the prixie context branch, logic tested |
-| brief generation | `persona/brand.ts` | working | deterministic, tested for identity, register, refusals, disclosure, publishing |
-| brand sanity checks | `persona/brand.ts` | working | flags vague disclosures, vague refusals, live-with-approval contradiction |
-
-## continuity: who the persona has met
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| identity anchors, expanded platform set | `core/connections.ts` | working | normalization per platform, ambiguity to nobody, malformed config to no anchors |
-| scope declaration per surface | `core/memory_scope.ts` | working | anchor verdicts: anchored, owner, stranger, no_config, ambiguous |
-| provenance tags on writes | `core/memory_scope.ts` | working | `platform:<p>`, `connection:<id>` |
-| memory client | `core/memory.ts` | working | real retelldb calls when configured; honest no-op with a warn when not |
-| read rules (what carries, what drops) | retelldb `routing/scope.py` at v0.2.8 | working upstream, pinned here | vendored python from the prixie context work; this repo pins the tag |
-| python and typescript agreeing on normalization | both sides | partial | same rules written twice; there is no shared fixture test across the two languages yet |
-
-## publishing
-
-| piece | status | evidence |
+| area | status | note |
 | --- | --- | --- |
-| draft / scheduled / live per persona, approval required by default | working | tested, including the contradiction case |
-| credential gate per platform | working | missing token is a refusal with a reason |
-| actual posting adapters | designed | each surface branch owns its own; main never posts |
+| scheduler and join trigger | working | ported, unit tested. decides when to join, claims deploys, resets stale claims |
+| join providers | working | ported: browserbase, kernel, photon behind one provider boundary |
+| platform joins | working | zoom (web sdk), google meet, teams, webex, ringcentral. detection no longer guesses |
+| attendance | working | form entry, chat message, and the persona's own join line |
+| capture requests | working | keyword and form captures, answered with citations |
+| transcripts | working | provider transcript, hinglish handling, ingest |
+| receipts | working | capture emails and expiry lines |
+| supabase schema and migrations | working | ported verbatim |
+| live meeting against a real account | unverified | nothing here claims a live join was re-run after the port |
 
-## tooling
+## the head wiring
 
-| piece | status |
-| --- | --- |
-| `tools/sync-context.sh` | working (fetch main, sync persona/ and core/, install the retelldb pin) |
-| `tools/matrix.ts` | working (persona x surface x platform, generated from the manifest) |
-| test suite | working, 38 tests |
+| piece | status | note |
+| --- | --- | --- |
+| surface contract | working | `engine/src/surface.ts`, register and brief from the manifest |
+| persona load | working | `CLAWBUZZ_PERSONA`, cached, refuses to invent a name |
+| join line and closing line | working | register shaped, disclosure preserved under truncation |
+| identity anchors | working | email resolves across zoom and mail as one connection |
 
-## surfaces
+## what is not here
 
-not in this branch. each surface branch states its own status in its own
-`coverage.md`, and the only claim main makes about a surface is that it exists
-and whose mouth it is.
+- the recap surface (unlisted link, fetch, transcribe, ingest). that is a
+  separate after-the-fact surface, still on the upstream branch.
+- live verification. the suite is 330 tests green offline, including 282
+  ported engine tests; a real join, a real transcript and a real receipt have
+  not been re-run since the port.
+
+## tests
+
+`deno task test` runs the head suite, the engine suite and the wiring tests.
+the obs and provider tests bind loopback sockets, which is why the task grants
+network access.
