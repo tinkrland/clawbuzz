@@ -62,3 +62,4 @@ not written), planned (direction), not possible (in this approach).
 not in this branch. each surface branch states its own status in its own
 `coverage.md`, and the only claim main makes about a surface is that it exists
 and whose mouth it is.
+| consistency (`persona/consistency.ts`) | working | four axes mandatory in prompt order, persona-owned character line, seed from the setup, drift by axis name. 6 tests |

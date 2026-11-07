@@ -126,3 +126,17 @@ is the string an operator runs on. a vertical with no named operator still
 gets a post, made from its surface register, so a manifest can grow a crew one
 hire at a time.
 
+## the four consistencies
+
+a diffusion model has no memory of the last frame, so consistency is not a
+setting, it is a property of the prompt text. loqo.ai names the four axes and
+calls consistency the hard part; they are mandatory here, in this order:
+character, location, composition, magnification.
+
+`persona/consistency.ts` builds the prompt body. the character block is
+generated from the persona's authored look and reused verbatim, so two
+surfaces cannot produce two different faces, and a shot may vary its
+composition line but never paraphrases the character line. the four texts also
+produce a seed, so the same setup re-runs the same image and a changed axis is
+a deliberate change. `consistencyDrift()` answers "is it still the same film"
+by naming the axes that moved.
