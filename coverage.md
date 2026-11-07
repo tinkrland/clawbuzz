@@ -63,3 +63,7 @@ not in this branch. each surface branch states its own status in its own
 `coverage.md`, and the only claim main makes about a surface is that it exists
 and whose mouth it is.
 | consistency (`persona/consistency.ts`) | working | four axes mandatory in prompt order, persona-owned character line, seed from the setup, drift by axis name. 6 tests |
+| wardrobe (`persona/wardrobe.ts`) | working | outfit cards, deterministic day rotation, validation. 8 tests with places |
+| places (`persona/places.ts`) | working | recurring places need a wide plate and at least two, invariants + light required |
+| shot (`persona/shot.ts`) | working | four axes plus wardrobe, seed includes the outfit, drift named per axis |
+| generation adapters (`generation/adapters.ts`) | designed | reference assembly and refusal logic tested; no model is called, no adapter verified |

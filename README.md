@@ -140,3 +140,25 @@ composition line but never paraphrases the character line. the four texts also
 produce a seed, so the same setup re-runs the same image and a changed axis is
 a deliberate change. `consistencyDrift()` answers "is it still the same film"
 by naming the axes that moved.
+
+## wardrobe and places
+
+identity is not the same thing as the clothes. three layers, kept apart:
+
+- **identity**, in the manifest, authored once, quoted verbatim into every prompt
+- **wardrobe**, `personas/<id>.wardrobe.jsonc`: garment level detail (fabric, cut, colour, hardware), one outfit worn per day. `outfitForDay` is deterministic, so the same day gives the same person, and tomorrow is a different day.
+- **places**, `personas/<id>.places.jsonc`: the rooms she actually stands in, with their invariants (mirror height, the chip in the windscreen, which side the light comes from) and two or three reference plates each.
+
+a recurring place is authored before it is shot in, never improvised. that is what keeps a bathroom mirror the same bathroom mirror, the way a person's is.
+
+`planShot(persona, {places, wardrobe}, request)` composes the four axes plus a wardrobe line, and `shotDrift` separates the two kinds of drift: the axes lock for as long as the place exists, the outfit locks for one shoot. a shoot locks character, location and wardrobe; composition is free.
+
+## generation
+
+the parts are built separately and combined last. `generation/adapters.ts` describes what an open video model accepts (character reference, place plates by role, keyframe) and refuses a plan the adapter cannot take before anything runs. adapters are descriptions, not clients: each carries `verified: false` until it has been run against a real endpoint, and the parameter names still have to be confirmed per release.
+
+```
+character reference + place plates + axis prompt  ->  reference to video  ->  clip
+```
+
+this is the 2026 practice, not an invention: reference kits, several wide plates per location reused as structure, wardrobe treated as its own asset.
