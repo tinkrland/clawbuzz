@@ -1,62 +1,47 @@
-# coverage: the head
+# coverage: streaming
 
-what main actually does, as of the commit that added this file. surface
-branches carry their own coverage docs; this one is only about the head, which
-is the part every surface depends on and the part that must not be hand waved.
+honest status for this branch. nothing below is claimed beyond what the code
+and the suite show.
 
-statuses: working (tested), partial (some paths), designed (shape agreed, code
-not written), planned (direction), not possible (in this approach).
+## what exists
 
-## persona as configuration
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| manifest format (identity, brand, registers, memory, publishing, cadence) | `persona/schema.ts` | working | typed, defaults applied at load |
-| jsonc loader with full error list | `persona/loader.ts` | working | tests: comments, trailing commas, string content preserved |
-| validation: required branding, non empty never list, all seven registers, slug ids, 0..1 tone | `persona/loader.ts` | working | one error per problem with its path |
-| persona directory listing | `persona/loader.ts` | working | `listPersonas`, used by `tools/matrix.ts` |
-| reference persona | `personas/example.persona.jsonc` | working | loads, prints, drives every test |
-
-## how one person sounds the same everywhere
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| register per surface | `persona/registers.ts` | working | resolution and defaults tested |
-| per-platform overrides (x, bluesky, threads, instagram, linkedin, discord, tiktok, youtube, spotify) | `persona/registers.ts` | working | shallow replace, tested |
-| a disabled surface refuses to run | `core/surface.ts` | working | construction throws |
-| one tone to cue mapping (face, call voice, narrator, podcast) | `persona/voice_adapter.ts` | working | ported byte-identical from the prixie context branch, logic tested |
-| brief generation | `persona/brand.ts` | working | deterministic, tested for identity, register, refusals, disclosure, publishing |
-| brand sanity checks | `persona/brand.ts` | working | flags vague disclosures, vague refusals, live-with-approval contradiction |
-
-## continuity: who the persona has met
-
-| piece | file | status | evidence |
-| --- | --- | --- | --- |
-| identity anchors, expanded platform set | `core/connections.ts` | working | normalization per platform, ambiguity to nobody, malformed config to no anchors |
-| scope declaration per surface | `core/memory_scope.ts` | working | anchor verdicts: anchored, owner, stranger, no_config, ambiguous |
-| provenance tags on writes | `core/memory_scope.ts` | working | `platform:<p>`, `connection:<id>` |
-| memory client | `core/memory.ts` | working | real retelldb calls when configured; honest no-op with a warn when not |
-| read rules (what carries, what drops) | retelldb `routing/scope.py` at v0.2.8 | working upstream, pinned here | vendored python from the prixie context work; this repo pins the tag |
-| python and typescript agreeing on normalization | both sides | partial | same rules written twice; there is no shared fixture test across the two languages yet |
-
-## publishing
-
-| piece | status | evidence |
+| piece | status | note |
 | --- | --- | --- |
-| draft / scheduled / live per persona, approval required by default | working | tested, including the contradiction case |
-| credential gate per platform | working | missing token is a refusal with a reason |
-| actual posting adapters | designed | each surface branch owns its own; main never posts |
+| obs-websocket 5.x bridge | working | ported. hello, challenge and response auth, request and response by id, scene item resolution with cache |
+| obs mock suite | working | in process server speaking the same protocol, loopback only |
+| twitch destination | working | stable public ingest plus a key from the environment |
+| kick destination | working | account specific url plus key, both required |
+| youtube live destination | working | account specific url plus key, both required. no stable ingest constant is assumed |
+| destination roster | working | ready only with credentials, receipts carry no key |
+| presence state machine | working | offline, starting, live, away, ending, with ordering on start and stop |
+| camera off handoff | working | hide now, audio to the end of the sentence, then the voice owns the voice |
+| stream session | working | go live, camera off, camera on, end |
+| persona wiring | working | register, brief, voice style from the head |
 
-## tooling
+## changed from the source port
 
-| piece | status |
-| --- | --- |
-| `tools/sync-context.sh` | working (fetch main, sync persona/ and core/, install the retelldb pin) |
-| `tools/matrix.ts` | working (persona x surface x platform, generated from the manifest) |
-| test suite | working, 38 tests |
+the ported bridge started and stopped a stream with `SetStreamActive`. the
+obs-websocket 5.x reference documents `StartStream` and `StopStream`, and does
+not document `SetStreamActive`. the bridge now calls the documented pair and
+falls back to the older name only when the server answers that the request is
+unsupported, which is covered by a test against the mock. a live obs has not
+confirmed which name it answers to, and that check is still owed.
 
-## surfaces
+`SetStreamSettings` still carries the shape the port used (`streamSettingsType`,
+`settings`, `save`) and is still unverified against a live instance.
 
-not in this branch. each surface branch states its own status in its own
-`coverage.md`, and the only claim main makes about a surface is that it exists
-and whose mouth it is.
+## what is a seam, not a feature
+
+| piece | status | note |
+| --- | --- | --- |
+| avatar provider client | not here | the port's masky client lives on the face surfaces; this branch reaches a rendered turn through `Render` |
+| livekit camera publisher | not here | the session accepts an unpublish callback instead |
+| chat read and reply | not here | the watch side of a platform, including youtube live chat, is not claimed |
+| scene authoring from the set work | not here | scenes are named, not built |
+
+## tests
+
+79 in total on this branch: the head's 38, the ported bridge, destination,
+integration and session suites, and the written presence and surface suites.
+`deno task test` runs them; the obs suites bind loopback, which is why network
+access is granted to the test task.

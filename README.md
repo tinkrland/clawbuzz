@@ -1,104 +1,44 @@
-# clawbuzz
+# streaming
 
-an internet personality, not a content pipeline.
+the persona live: twitch, kick and youtube live, driven through obs.
 
-clawbuzz is one persona with seven ways of being present: in a meeting, on a
-stream, in a short clip, in a long video, in your ear, on a still frame, and in
-text. the same person in all seven, because identity, voice, brand, memory and
-publishing permission are declared once, in configuration, and every surface
-reads them.
+a stream is a room with a promise attached, so this branch is built around
+presence rather than around a toggle. offline, walking on, live, stepping
+away and ending are different promises, and each one has a different picture
+and a different audio route.
 
-the tools this is not: a ugc generator that stops at "make me a tiktok". ugc is
-one of seven surfaces here, and it is not first. what makes a personality is
-that the stream, the clip, the podcast and the post are recognisably the same
-person with the same point of view and the same memory of who it has met.
+## what it does
 
-## one head, seven mouths
+- `integrations/obs.ts` speaks obs-websocket 5.x directly: hello, challenge
+  and response identify, then request and response ops matched on request id.
+  the bridge is ours, not a platform's, so scenes and sources stay the
+  streamer's own.
+- `integrations/twitch.ts`, `kick.ts`, `youtube.ts`: one destination shape,
+  server plus key. twitch's ingest is stable and public; kick and youtube live
+  hand out account specific values, so both are read from the environment and
+  never hardcoded.
+- `server/destinations.ts`: the roster. a destination is ready only when its
+  credentials exist, and a receipt never carries a key.
+- `server/presence.ts`: the state machine, with the ordering that matters.
+  the scene and camera settle before the encoder starts, and the encoder
+  stops before the scene clears.
+- `server/handoff.ts`: camera off without cutting a sentence. the visual goes
+  dark now, the rendered clip plays to its last syllable, then the voice owns
+  the voice.
+- `server/stream.ts`: the session object a streamer actually operates.
+- `server/surface.ts`: the head, wired. `streamingSurface(persona)` gives the
+  register and the brief, `goLive` points obs and walks presence.
 
-```
-                     personas/<id>.persona.jsonc
-                    identity · brand · registers · memory
-                                  |
-                            persona/ + core/            <- main branch
-                                  |
-   +-------+-------+-------+-----+-----+-------+-------+
-   |       |       |       |           |       |       |
-meetings streaming short longform    audio  static   text
-   |       |       |       |           |       |       |
- zoom    twitch   tiktok  youtube    rss   insta    x, bsky,
- meet    kick     reels   long form  spotify  pinterest threads,
- teams   youtube  shorts  thumbnails apple    carousel  linkedin,
-         live                              stills    discord
-```
+## what it does not do
 
-main is the head. each surface is a branch, with its own machines and its own
-coverage doc. a surface never edits `persona/` or `core/`: it syncs them from
-main with `tools/sync-context.sh`, so seven branches cannot grow seven slightly
-different definitions of who the persona is.
+it does not read or answer chat, it does not carry the avatar provider or the
+livekit camera publisher, and it does not touch a platform account beyond
+obs's own stream key. see coverage.md for the line between ported, written and
+unverified.
 
-## a surface, in six lines
+## run
 
-```ts
-import { loadPersona } from "./persona/loader.ts";
-import { defineSurface } from "./core/surface.ts";
+    deno task test
 
-const persona = await loadPersona();                 // CLAWBUZZ_PERSONA
-const text = defineSurface("text", { persona, platform: "bluesky" });
-
-const brief = text.brief();                          // who, where, how it sounds, what it refuses
-const scope = text.scope("@someone");                // who is in front of it, from a real handle
-const notes = await text.recall("what we owe people"); // null when memory is unset, never invented
-```
-
-that is the whole contract. everything else a surface does (render a frame,
-join a call, publish a post) is the surface's own business, and none of it gets
-to restate the identity.
-
-## what makes it one person
-
-- **registers, in configuration.** how the persona sounds in a meeting is not
-  how it sounds in a tiktok, and both are written down per surface, plus
-  per-platform overrides (`bluesky is not linkedin`) in the same file.
-- **one voice mapping.** a single tone profile (warmth, sarcasm, playfulness,
-  confidence) maps to delivery cues in one module, so the face, the voice on a
-  call, the narrator and the podcast host are the same voice by construction.
-- **identity anchors.** people are known by handles across platforms
-  (`core/connections.ts`), so a second conversation is a continuation, and a
-  stranger stays a stranger instead of being guessed at.
-- **scoped memory.** every read and write declares which surface it is and who
-  is in front of it. the head (retelldb, pinned in `requirements.txt`) enforces
-  what may carry from a meeting into a public post, and reports what it withheld.
-- **one publishing permission.** draft, scheduled or live, per persona, with
-  owner approval required by default. a pipeline renders; a persona has accounts.
-
-## surfaces
-
-| surface | branch | what goes out | ported from |
-| --- | --- | --- | --- |
-| meetings | `meetings` | joins, attendance, captures, transcripts, receipts | the prixie proxy engine |
-| streaming | `streaming` | live video to twitch, kick, youtube live, obs bridge | the prixie video branch |
-| shortform | `shortform` | verticals: tiktok, reels, shorts, with ui safe zones | the prixie socmed branch |
-| longform | `longform` | youtube long form written as video, chapters, thumbnails | new, on the media core |
-| audio | `audio` | podcast episodes, chapters, transcripts, feed | new, on the voice core |
-| static | `static` | proskena stills and carousels, sized per platform | the prixie plate and set work |
-| text | `text` | x, bluesky, threads, instagram, linkedin, discord presence | new, on the brief and registers |
-
-status per surface lives in that branch's own `coverage.md`, and the head's
-status is in this branch's `coverage.md`. nothing here claims a live capability
-the code cannot show.
-
-## quick start
-
-```sh
-cp .env.example .env            # CLAWBUZZ_PERSONA=example
-deno task test                  # 38 tests: manifest, registers, brief, scope, publishing
-deno task matrix                # print persona x surface x platform
-```
-
-## docs
-
-- `repo.md` the branch map and the conventions
-- `coverage.md` what the head actually does, honestly
-- `roadmap.md` the direction, in order
-- `persona/readme.md` the manifest format
-- `core/readme.md` the runtime a mouth gets
+the obs tests run an in process mock that speaks the same protocol, over
+loopback, which is why the task grants network access.
