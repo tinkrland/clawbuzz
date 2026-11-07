@@ -1,33 +1,31 @@
-# static
+# proskena
 
-the persona as a frame: feed posts, pins, verticals, carousels.
+photographs of the persona, rendered rather than generated.
 
-a still is the cheapest thing a personality posts and the easiest to get wrong,
-because one frame has to carry the whole idea. so the frame is authored, not
-generated: the plate is a proskena scene state (backdrop, props, light rig, lens)
-rendered headlessly, and the person is composited in front of it. tuesday's
-frame and the frame six months from now match by construction, not by prompt
-discipline.
+the frame here comes from geometry: a proskena scene state (backdrop, props,
+light rig, camera) rendered headlessly, with the person composited in front of
+it. that is why every frame of a shoot holds: nothing in the picture was
+guessed, so nothing drifted. a set authored once photographs the same on
+monday and on the twentieth shoot.
 
-ported from the stage work, kept as one copy on this branch:
+## what lives here
 
-- `stage/plate.ts` the plate spec: proskena-scene-state, subject null
-- `stage/scene.ts` the pinhole camera: room geometry to framing values
-- `stage/set.ts` sets, backdrops, light recipes, the person stage scale
-- `stage/sizes.ts` the frame families and the ui safe bands
-- `stage/composite.ts`, `stage/overlay.ts` the ffmpeg argument builders
-  (composite plans, the screen recording cam box)
-- `stage/masky.ts` the avatar client the set module needs for its look
+- `stage/` the ported proskena stage: plate spec, camera projection, sets and
+  light recipes, frame sizes with platform safe bands, the composite builders,
+  and the stream cam box.
+- `photoshoot/` the shoot itself: a shot list (hero, portrait, detail,
+  environment), one plate per shot from the same set, and a check that names a
+  missing frame or a duplicate magnification.
+- `stills/` the output formats a shoot is delivered in: single frames and
+  carousels, sized per platform.
 
-written here:
+## what does not live here
 
-- `stills/still.ts` a still as a job: one plate, one frame, the caption band
-  that stays out of platform chrome
-- `stills/carousel.ts` a carousel as an argument: cover, one idea per slide, alt
-  text required, no call to action the register does not carry
-- `stills/surface.ts` the head wiring: art direction register, memory scope,
-  publishing gate
+generated imagery. a diffusion model has no memory of the last frame, so it
+needs a different contract (the four consistencies in the head's
+`persona/consistency.ts`) and a different pipeline. that work is on the
+`static` branch. this branch renders; it never prompts.
 
-honest edge: the renderer itself (`scripts/render_plate.py`) and the prop assets
-are not on this branch yet, so `renderPlateCmd` names the expected path and the
-plate spec is the contract. no generated background is ever substituted.
+the rule is worth stating because it is easy to blur: a plate is deterministic
+and a photograph is authored, while a generated image is a sample. mixing them
+in one pipeline is how a personality ends up with three faces.

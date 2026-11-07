@@ -1,4 +1,4 @@
-# coverage: static
+# coverage: proskena
 
 | piece | status | what it means |
 | --- | --- | --- |
@@ -18,3 +18,7 @@ renderer note: a still reports `subject: null` by design. the person is a
 composited layer, never part of the plate.
 
 tests: `deno task test`. the ported suites run unchanged.
+| photoshoot (`photoshoot/photoshoot.ts`) | working | shot list of four kinds, one plate per shot from one set, subject never baked into the plate, duplicate magnification refused. 6 tests |
+| proskena stage | working | ported: plate spec, scene projection, sets and light recipes, sizes with safe bands, composite builders, cam box |
+| rendering | designed | `renderPlateCmd` names `scripts/render_plate.py` and the prop assets, which are not on this branch yet |
+| diffusion imagery | not here | lives on `static`, under the four-consistency contract |
