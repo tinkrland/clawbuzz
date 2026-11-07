@@ -15,7 +15,10 @@ for (const check of report.checks) {
 }
 for (const id of report.checks.map((c) => c.adapter)) {
   const adapter = ADAPTERS.find((a) => a.id === id)!;
-  console.log(`  ${id}: field ${adapter.reference_field}, cap ${adapter.max_references}, ${adapter.evidence}`);
+  console.log(`  ${id}: ${adapter.provider} field ${adapter.reference_field}, cap ${adapter.max_references}, ${adapter.evidence} from ${adapter.source_kind}`);
+}
+if (report.catalog_sourced.length) {
+  console.log(`\nread from a catalogue, confirm against the provider's own api reference before wiring: ${report.catalog_sourced.join(", ")}`);
 }
 if (report.assumed.length) {
   console.log(`\nassumed, confirm before use: ${report.assumed.join(", ")}`);
