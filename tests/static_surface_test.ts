@@ -1,60 +1,61 @@
-import { assertEquals, assertThrows } from "jsr:@std/assert@1";
+import { assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { loadPersonaFile } from "../persona/loader.ts";
+import { loadPlaces, loadWardrobe } from "../tools/libraries.ts";
 import { makeStill, prepareCarousel, prepareStill, staticSurface } from "../stills/surface.ts";
-import type { StillProvider } from "../stills/still.ts";
 
 const persona = await loadPersonaFile("personas/example.persona.jsonc");
-const scene = {
-  location: "the same kitchen at 7am: window light from the left",
-  composition: "subject on the right third",
-  magnification: "waist up, 50mm equivalent",
+const libraries = { places: await loadPlaces("example"), wardrobe: await loadWardrobe("example") };
+
+const stillRequest = {
+  place_id: "car-interior",
+  outfit_id: "plain-tee",
+  day: "2026-11-07",
+  composition: "driver's seat, hands on the wheel",
+  magnification: "medium, the windscreen in frame",
+  frameTarget: "portrait",
 };
 
-Deno.test("the surface is static, on instagram by default", () => {
+Deno.test("the surface is the static lane and runs as the frame operator", () => {
   const surface = staticSurface(persona);
   assertEquals(surface.name, "static");
   assertEquals(surface.platform, "instagram");
   assertEquals(surface.crew().member.role, "the frame operator");
 });
 
-Deno.test("a still is prepared through the head's consistency contract", () => {
-  const plan = prepareStill(persona, { scene, frameTarget: "vertical" });
-  assertEquals(plan.prompt.includes(persona.display_name), true);
-  assertEquals(plan.frame.width, 1080);
+Deno.test("preparing a still is planning a shot, with the room and the clothes", () => {
+  const plan = prepareStill(persona, libraries, stillRequest);
+  assertEquals(plan.shot.place.id, "car-interior");
+  assertEquals(plan.shot.outfit.id, "plain-tee");
+  assertEquals(plan.drifted, []);
 });
 
-Deno.test("no provider means no frame, and it says so", async () => {
-  await assertRejects(() => makeStill(persona, { scene, frameTarget: "square" }, []), "no still provider");
+Deno.test("no provider configured means the frame stays a plan, and it says so", async () => {
+  await assertRejects(() => makeStill(persona, libraries, stillRequest, []), Error, "no still provider");
 });
 
-async function assertRejects(fn: () => Promise<unknown>, includes: string) {
-  let message = "";
-  try {
-    await fn();
-  } catch (err) {
-    message = (err as Error).message;
-  }
-  assertEquals(message.includes(includes), true, `expected "${includes}", got "${message}"`);
-}
-
-Deno.test("with a provider, the receipt names the model and the seed", async () => {
-  const provider: StillProvider = { name: "test-model", generate: () => Promise.resolve({ uri: "file://out.png" }) };
-  const out = await makeStill(persona, { scene, frameTarget: "square" }, [provider]);
-  assertEquals(out.provider, "test-model");
-  assertEquals(out.uri, "file://out.png");
+Deno.test("a configured provider makes the frame and the output records which model", async () => {
+  const out = await makeStill(persona, libraries, stillRequest, [{
+    name: "fake-model",
+    generate: async () => ({ uri: "file:///tmp/frame.png" }),
+  }]);
+  assertEquals(out.provider, "fake-model");
+  assertEquals(out.uri, "file:///tmp/frame.png");
   assertEquals(out.seed > 0, true);
+  assertEquals(out.prompt.includes("wardrobe:"), true);
 });
 
-Deno.test("a carousel is prepared as a series, never as loose slides", () => {
-  const slides = prepareCarousel(persona, {
-    location: scene.location,
-    magnification: scene.magnification,
+Deno.test("a carousel is prepared through the same libraries", () => {
+  const slides = prepareCarousel(persona, libraries, {
+    place_id: "bathroom-mirror",
+    outfit_id: "desk-day",
+    day: "2026-11-07",
+    magnification: "medium, one person, the mirror in frame",
     frameTarget: "portrait",
     slides: [
-      { claim: "one", composition: "left third", alt: "a" },
-      { claim: "two", composition: "right third", alt: "b" },
+      { claim: "one", composition: "waist up, eyes to camera", alt: "alt a" },
+      { claim: "two", composition: "close on the phone in her hand", alt: "alt b" },
     ],
   });
   assertEquals(slides.length, 2);
-  assertEquals(assertThrows, assertThrows, "shape check");
+  assertEquals(slides[0].plan.shot.place.id, "bathroom-mirror");
 });

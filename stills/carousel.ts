@@ -5,10 +5,9 @@
 // that jumps rooms reads as five unrelated posts. only the composition moves,
 // which is what makes the sequence feel like one shoot instead of a folder.
 
-import { consistencyBlocks, consistencyPrompt, consistencySeed, type ConsistencyBlocks } from "../persona/consistency.ts";
 import type { PersonaManifest } from "../persona/schema.ts";
 import { frameFor, textBand, type Frame } from "./frames.ts";
-import { lockedDrift, type StillProvider, type StillPlan } from "./still.ts";
+import { generateStill, planStill, type Libraries, type StillPlan, type StillProvider } from "./still.ts";
 
 export const SLIDE_WORD_CEILING = 18;
 export const MAX_SLIDES = 10;
@@ -21,7 +20,11 @@ export interface Slide {
 }
 
 export interface CarouselRequest {
-  location: string;
+  // one room, one outfit, one magnification for the whole sequence: only the
+  // composition moves between slides
+  place_id: string;
+  outfit_id?: string;
+  day?: string;
   magnification: string;
   frameTarget: string;
   slides: Slide[];
@@ -61,26 +64,23 @@ export interface SlidePlan {
   plan: StillPlan;
 }
 
-export function planCarousel(persona: PersonaManifest, req: CarouselRequest): SlidePlan[] {
+export function planCarousel(persona: PersonaManifest, libraries: Libraries, req: CarouselRequest): SlidePlan[] {
   const problems = checkCarousel(req);
   if (problems.length) {
     throw new Error(`carousel: ${problems.map((p) => `${p.where}: ${p.problem}`).join("; ")}`);
   }
-  const frame = frameFor(req.frameTarget);
-  let reference: ConsistencyBlocks | null = null;
+  let reference: StillPlan | null = null;
   return req.slides.map((slide, index) => {
-    const scene = { location: req.location, magnification: req.magnification, composition: slide.composition };
-    const blocks = consistencyBlocks(persona, scene);
-    const plan: StillPlan = {
+    const plan = planStill(persona, libraries, {
+      place_id: req.place_id,
+      outfit_id: req.outfit_id,
+      day: req.day,
+      composition: slide.composition,
+      magnification: req.magnification,
       frameTarget: req.frameTarget,
-      frame,
-      band: textBand(frame),
-      blocks,
-      prompt: consistencyPrompt(persona, scene),
-      seed: consistencySeed(blocks),
-      drifted: reference ? lockedDrift(reference, blocks) : [],
-    };
-    reference = reference ?? blocks;
+      reference: reference ?? undefined,
+    });
+    reference = reference ?? plan;
     return { index, claim: slide.claim, alt: slide.alt, plan };
   });
 }
@@ -94,8 +94,8 @@ export async function generateCarousel(
     if (slide.plan.drifted.length) {
       throw new Error(`carousel: slide ${slide.index + 1} drifts in ${slide.plan.drifted.join(", ")}`);
     }
-    const made = await provider.generate({ prompt: slide.plan.prompt, seed: slide.plan.seed, frame: slide.plan.frame });
-    out.push({ uri: made.uri, seed: slide.plan.seed, alt: slide.alt });
+    const made = await generateStill(provider, slide.plan);
+    out.push({ uri: made.uri, seed: made.seed, alt: slide.alt });
   }
   return out;
 }

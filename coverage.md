@@ -18,3 +18,5 @@ renderer note: a still reports `subject: null` by design. the person is a
 composited layer, never part of the plate.
 
 tests: `deno task test`. the ported suites run unchanged.
+| still planner on wardrobe and places | working | `planStill` resolves a real room and a real outfit; unknown place refused; 7 tests |
+| carousel on the shot planner | working | one room, one outfit, one magnification, distinct seeds; 5 tests |

@@ -1,88 +1,82 @@
-import { assertEquals, assertThrows } from "jsr:@std/assert@1";
+import { assertEquals, assertRejects, assertThrows } from "jsr:@std/assert@1";
 import { loadPersonaFile } from "../persona/loader.ts";
-import { consistencyBlocks } from "../persona/consistency.ts";
+import { loadPlaces, loadWardrobe } from "../tools/libraries.ts";
 import { generateStill, planStill, type StillProvider } from "../stills/still.ts";
-import { frameFor, textBand } from "../stills/frames.ts";
 
 const persona = await loadPersonaFile("personas/example.persona.jsonc");
-const scene = {
-  location: "the same kitchen at 7am: window light from the left, chipped mug on the counter",
-  composition: "medium, subject on the right third, counter edge leading in from the left",
-  magnification: "waist up, 50mm equivalent",
+const libraries = { places: await loadPlaces("example"), wardrobe: await loadWardrobe("example") };
+
+const base = {
+  place_id: "bathroom-mirror",
+  outfit_id: "plain-tee",
+  day: "2026-11-07",
+  composition: "waist up, facing the mirror, phone at chest height",
+  magnification: "medium, one person, the room readable behind her",
+  frameTarget: "portrait",
 };
 
-Deno.test("a still carries all four consistencies and a seed", () => {
-  const plan = planStill(persona, { scene, frameTarget: "vertical" });
-  assertEquals(plan.prompt.split("\n").length, 4);
-  assertEquals(plan.prompt.startsWith("character: "), true);
-  assertEquals(plan.seed > 0, true);
-  assertEquals(plan.band, textBand(frameFor("vertical")));
-  assertEquals(plan.frame.height, 1920);
+Deno.test("a still names a room from the library and an outfit from the closet", () => {
+  const plan = planStill(persona, libraries, base);
+  assertEquals(plan.shot.place.id, "bathroom-mirror");
+  assertEquals(plan.shot.outfit.id, "plain-tee");
+  assertEquals(plan.prompt.split("\n").length, 5);
+  assertEquals(plan.prompt.includes("wardrobe:"), true);
+  assertEquals(plan.frame.width < plan.frame.height, true);
+  assertEquals(plan.drifted, []);
 });
 
-Deno.test("the same setup re-runs the same frame", () => {
-  const a = planStill(persona, { scene, frameTarget: "square" });
-  const b = planStill(persona, { scene, frameTarget: "square" });
+Deno.test("the same day, room and outfit give the same seed", () => {
+  const a = planStill(persona, libraries, base);
+  const b = planStill(persona, libraries, base);
   assertEquals(a.seed, b.seed);
-  assertEquals(a.prompt, b.prompt);
+  const other = planStill(persona, libraries, { ...base, outfit_id: "cold-out" });
+  assertEquals(other.seed === a.seed, false, "a different outfit is a different frame");
 });
 
-Deno.test("a series may move the composition and not the film", () => {
-  const reference = consistencyBlocks(persona, scene);
-  const moved = planStill(persona, {
-    scene: { ...scene, composition: "wide, subject small and left, room readable" },
-    frameTarget: "square",
-    reference,
-  });
-  assertEquals(moved.drifted, [], "composition is the director's variable");
-
-  const reframed = planStill(persona, {
-    scene: { ...scene, magnification: "full body, 35mm" },
-    frameTarget: "square",
-    reference,
-  });
-  assertEquals(reframed.drifted, ["magnification"]);
+Deno.test("changing only the composition is not drift", () => {
+  const first = planStill(persona, libraries, base);
+  const second = planStill(persona, libraries, { ...base, composition: "close on the hands and the phone", reference: first });
+  assertEquals(second.drifted, []);
+  assertEquals(second.shot.blocks.character, first.shot.blocks.character);
 });
 
-Deno.test("a drifted plan refuses to generate instead of lying in the receipt", async () => {
-  const reference = consistencyBlocks(persona, scene);
-  const plan = planStill(persona, {
-    scene: { ...scene, location: "a completely different street at night" },
-    frameTarget: "square",
-    reference,
+Deno.test("a series may not change the room and call it the same shoot", async () => {
+  const first = planStill(persona, libraries, base);
+  const moved = planStill(persona, libraries, {
+    ...base,
+    place_id: "car-interior",
+    composition: "driver's seat, hands on the wheel",
+    reference: first,
   });
-  const provider: StillProvider = { name: "fake", generate: () => Promise.resolve({ uri: "file://x.png" }) };
-  await assertThrowsAsync(() => generateStill(provider, plan), "series drift in location");
+  assertEquals(moved.drifted.includes("location"), true);
+  await assertRejects(() => generateStill({ name: "fake", generate: async () => ({ uri: "x" }) }, moved), Error, "series drift");
 });
 
-async function assertThrowsAsync(fn: () => Promise<unknown>, includes: string) {
-  let message = "";
-  try {
-    await fn();
-  } catch (err) {
-    message = (err as Error).message;
-  }
-  assertEquals(message.includes(includes), true, `expected "${includes}", got "${message}"`);
-}
+Deno.test("an outfit change inside one shoot is drift, and says so", () => {
+  const first = planStill(persona, libraries, base);
+  const changed = planStill(persona, libraries, { ...base, outfit_id: "desk-day", reference: first });
+  assertEquals(changed.drifted.includes("wardrobe"), true);
+  assertEquals(changed.drifted.includes("character"), false, "the person did not change, the clothes did");
+});
 
-Deno.test("the provider receives the prompt and the seed, and the receipt names it", async () => {
-  const plan = planStill(persona, { scene, frameTarget: "pin" });
-  let seen = { prompt: "", seed: 0 };
+Deno.test("a room that is not in the library is refused, never improvised", () => {
+  assertThrows(() => planStill(persona, libraries, { ...base, place_id: "some-cafe" }), Error, "no place \"some-cafe\"");
+});
+
+Deno.test("the provider gets the axis prompt and the seed, and the receipt records both", async () => {
+  const seen: { prompt: string; seed: number }[] = [];
   const provider: StillProvider = {
-    name: "test-model",
-    generate: (input) => {
-      seen = { prompt: input.prompt, seed: input.seed };
-      return Promise.resolve({ uri: "file://frame.png" });
+    name: "fake-model",
+    generate: async (input) => {
+      seen.push({ prompt: input.prompt, seed: input.seed });
+      return { uri: "file:///tmp/still.png" };
     },
   };
+  const plan = planStill(persona, libraries, base);
   const receipt = await generateStill(provider, plan);
-  assertEquals(seen.prompt, plan.prompt);
-  assertEquals(seen.seed, plan.seed);
-  assertEquals(receipt.provider, "test-model");
-  assertEquals(receipt.uri, "file://frame.png");
-});
-
-Deno.test("an unknown frame or a thin scene is refused by name", () => {
-  assertThrows(() => planStill(persona, { scene, frameTarget: "billboard" }), Error, "unknown still frame");
-  assertThrows(() => planStill(persona, { scene: { ...scene, location: "" }, frameTarget: "square" }), Error, "location");
+  assertEquals(seen.length, 1);
+  assertEquals(seen[0].seed, plan.seed);
+  assertEquals(receipt.provider, "fake-model");
+  assertEquals(receipt.uri, "file:///tmp/still.png");
+  assertEquals(receipt.prompt, plan.prompt);
 });
