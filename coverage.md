@@ -16,6 +16,8 @@ not written), planned (direction), not possible (in this approach).
 | validation: required branding, non empty never list, all seven registers, slug ids, 0..1 tone | `persona/loader.ts` | working | one error per problem with its path |
 | persona directory listing | `persona/loader.ts` | working | `listPersonas`, used by `tools/matrix.ts` |
 | reference persona | `personas/example.persona.jsonc` | working | loads, prints, drives every test |
+| crew (`persona/crew.ts`) | working | one operator per vertical, identity shared, register narrowable, escalation declared. 7 tests |
+| crew validation | working | unknown surface, missing role and empty focus are refused by the loader |
 
 ## how one person sounds the same everywhere
 

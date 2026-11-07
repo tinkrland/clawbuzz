@@ -102,3 +102,27 @@ deno task matrix                # print persona x surface x platform
 - `roadmap.md` the direction, in order
 - `persona/readme.md` the manifest format
 - `core/readme.md` the runtime a mouth gets
+
+## one persona, a crew of operators
+
+the same identity does not have to be carried by the same agent. seven
+verticals is seven jobs, and an operator that writes podcast chapters in the
+morning and joins a client meeting in the afternoon is one agent wearing seven
+hats, with the hats leaking into each other.
+
+so a persona may field a crew: `crew.<surface>` in the manifest names the
+operator for that vertical, with a role, a focus, the playbooks it is trusted
+with, what it may do alone, and what it hands back to the owner.
+
+what a crew member cannot do is become a different person. `persona/crew.ts`
+composes the brief as identity first, then the post: the name, promise, never
+list and disclosure come from the head and are identical across all seven,
+while the role, register narrowing and escalation line differ. the podcast
+operator sounds like the persona; it does not sound like the meetings
+operator.
+
+`crewRoster(persona)` lists who is on shift, and `crewBrief(persona, surface)`
+is the string an operator runs on. a vertical with no named operator still
+gets a post, made from its surface register, so a manifest can grow a crew one
+hire at a time.
+
