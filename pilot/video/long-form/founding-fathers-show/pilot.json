@@ -1,0 +1,32 @@
+{
+  "id": "founding-fathers-show",
+  "title": "The Founding Fathers Show",
+  "vertical": "video/long-form",
+  "surface": "longform",
+  "form": "long-form",
+  "format": "talk show on a sofa: host plus four recurring guests, one era per episode, 45 to 60 minutes, four segments (the greeting, the catch-up, the reaction, the closing question)",
+  "cadence": "monthly",
+  "fiction": {
+    "kind": "satire_with_illustrated_likeness",
+    "disclosure": "The likeness is deliberate and openly absurd: illustrated caricature, one permanent chyron reading not a real interview, and the host says on camera that these are actors in a comedy about history. Nothing here is presented as authentic footage."
+  },
+  "guardrails": [
+    "illustrated or animated likeness only, never photoreal synthetic video of a real historical figure that could be mistaken for archival footage",
+    "no invented quotation is ever presented as authentic: a founder's position is grounded in his own writings with the source named, and where the host is extrapolating he says so in the line before",
+    "every historical claim carries a source in the episode's show notes",
+    "tragedies are explained, never mocked: the comedy is the guests' incomprehension of a century they missed, and the host states plainly what happened and to whom",
+    "no modern partisan framing put in a founder's mouth as though his own writings support it; where a modern analogy is made, it is named as the host's analogy",
+    "the guests stay dead: no episode pretends they have opinions on a living person's conduct beyond what the format's satire explicitly frames"
+  ],
+  "episode_zero": {
+    "title": "The War to End All Wars, Explained to Men Who Started One",
+    "running_time": "52 minutes",
+    "beats": [
+      "the greeting: they arrive mid-argument from 1787, and the host has to explain what a camera is before anything else",
+      "the catch-up: 1914 to 1918 in nine minutes, archival stills, a map that fills in as the front moves",
+      "the reaction: each guest answers from his own writings, the host names the source, and at least one answer is a guess labelled as one",
+      "the disagreement: two of them take incompatible lessons from it, and nobody is corrected for the sake of the audience",
+      "the closing question: what would you have done in 1917, answered in character, then the chyron and the outro"
+    ]
+  }
+}

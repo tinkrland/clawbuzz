@@ -1,0 +1,32 @@
+{
+  "id": "holmes-at-home",
+  "title": "Holmes at Home",
+  "vertical": "audio/podcast",
+  "surface": "audio",
+  "form": "podcast",
+  "format": "solo narration in true crime form: cold open, the arrival, the timeline, the suspects, the reveal, the epilogue. 18 to 24 minutes, no ads read in character",
+  "cadence": "weekly, tuesday",
+  "fiction": {
+    "kind": "invented_cases",
+    "disclosure": "Every case is invented. The show says so in the cold open, in the show notes, and in the episode title card: this is a story, nobody was hurt, no real case is being reopened."
+  },
+  "guardrails": [
+    "no real case, real victim, real suspect or living person, at any point, including as a passing comparison",
+    "no invented case may borrow enough detail from a real one to be identifiable",
+    "police and forensic procedure stays generic and is never presented as a real account of a real force",
+    "canon only: the 1887 to 1927 stories are public domain, the modern adaptations are not, and none of their inventions are borrowed",
+    "the armchair is the constraint: the case is solved from letters, photographs and recordings, never by the narrator going somewhere and confronting somebody"
+  ],
+  "episode_zero": {
+    "title": "The Locked Sunroom",
+    "running_time": "22 minutes",
+    "beats": [
+      "cold open: a letter arrives postmarked from a village that is not on the map, and the narrator says the line about the case being invented",
+      "the arrival: what the envelope contained, described as evidence rather than exposition",
+      "the timeline: a dinner party, a conservatory, a window that was painted shut in 1974",
+      "the suspects: five guests, each with one detail that does not fit the room",
+      "the reveal: the detail was the paint, and the paint was the alibi",
+      "the epilogue: what the letter writer was actually asking for, which was never the case"
+    ]
+  }
+}

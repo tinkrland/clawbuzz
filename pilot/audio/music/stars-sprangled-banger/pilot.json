@@ -1,0 +1,31 @@
+{
+  "id": "stars-sprangled-banger",
+  "title": "Stars Sprangled Banger",
+  "vertical": "audio/music",
+  "surface": "audio",
+  "form": "music",
+  "format": "one anthem, one genre per episode: an arrangement brief, a 60 to 90 second master, stem set, and a cover spec. genres rotate so no two consecutive episodes share a register",
+  "cadence": "fortnightly",
+  "fiction": {
+    "kind": "arrangement_experiment",
+    "disclosure": "The song is public domain and the arrangement is new. Every episode states the basis: words 1814, tune To Anacreon in Heaven, and the arrangement is not a recording of any existing performance."
+  },
+  "guardrails": [
+    "no political endorsement, no campaign use, no implied statement on any living politician",
+    "no parody that mocks the song's meaning or the people who served under it: the joke is the genre, never the anthem",
+    "no sampling of a copyrighted recording, and no imitation of a living artist's voice",
+    "each episode credits the genre tradition being borrowed rather than presenting an arrangement as rootless",
+    "one genre per episode, fully committed: no medley, no ironic halfway house"
+  ],
+  "episode_zero": {
+    "title": "pop alt rock",
+    "running_time": "90 seconds",
+    "beats": [
+      "arrangement brief: key, tempo, drum and guitar register, vocal delivery, and the one production rule that makes it that genre",
+      "the build: verse one as a quiet intro, chorus as a wall, the third line of each verse left ragged",
+      "the hook: one line repeated one time more than it should be, which is what makes it pop",
+      "stems: drums, bass, guitars, vocal, and a room mic printed with the reverb rather than added after",
+      "the note: the anthem is public domain, this arrangement is ours, and the credit line names the tradition it borrows from"
+    ]
+  }
+}
