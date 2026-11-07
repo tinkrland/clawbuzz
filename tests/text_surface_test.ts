@@ -3,6 +3,7 @@ import { loadPersonaFile } from "../persona/loader.ts";
 import { receiptFor, replyTo, textSurface, writeDraft } from "../server/surface.ts";
 import { DraftStore } from "../server/drafts.ts";
 import { parseConnections } from "../core/connections.ts";
+import { crewBrief } from "../persona/crew.ts";
 
 const EXAMPLE = new URL("../personas/example.persona.jsonc", import.meta.url).pathname;
 const persona = await loadPersonaFile(EXAMPLE);
@@ -68,4 +69,17 @@ Deno.test("a reply carries the scope of the person it answers", async () => {
   );
   assertEquals(plan.scope.connection_id, "friend");
   assertEquals(plan.composed.parts.length, 1);
+});
+
+Deno.test("the surface runs as the written operator, not as the whole persona", () => {
+  const s = textSurface(persona, "bluesky");
+  const crew = s.crew();
+  assertEquals(crew.surface, "text");
+  assertEquals(crew.explicit, true);
+  assertEquals(crew.member.role, "the written operator");
+  assertStringIncludes(crew.register, s.register().register);
+  // the identity is the head's, the post is this operator's
+  const brief = crewBrief(persona, "text", "bluesky");
+  assertStringIncludes(brief, persona.brand.disclosure);
+  assertStringIncludes(brief, "reply triage");
 });
