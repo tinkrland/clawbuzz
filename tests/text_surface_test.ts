@@ -77,7 +77,9 @@ Deno.test("the surface runs as the written operator, not as the whole persona", 
   assertEquals(crew.surface, "text");
   assertEquals(crew.explicit, true);
   assertEquals(crew.member.role, "the written operator");
-  assertStringIncludes(crew.register, s.register().register);
+  // the operator narrows the surface register; the platform override still
+  // applies on top, which is why this compares with the surface, not bluesky
+  assertStringIncludes(crew.register, persona.voice.register_by_surface.text.register);
   // the identity is the head's, the post is this operator's
   const brief = crewBrief(persona, "text", "bluesky");
   assertStringIncludes(brief, persona.brand.disclosure);
