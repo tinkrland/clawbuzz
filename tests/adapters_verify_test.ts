@@ -20,6 +20,9 @@ Deno.test("a description with no identity carrier is broken, not just unverified
     licence: "oss",
     accepts: ["place_wide"],
     max_references: 4,
+    reference_field: "reference_images",
+    evidence: "assumed",
+    constraints: [],
     notes: "takes a room and nothing else",
     verified: false,
   };
@@ -27,18 +30,48 @@ Deno.test("a description with no identity carrier is broken, not just unverified
   assertEquals(verificationReport([bad]).ok, false);
 });
 
-Deno.test("a ceiling below the smallest kit is refused", () => {
+Deno.test("a ceiling below the smallest kit is refused for a reference adapter", () => {
   const tooSmall: Adapter = {
     id: "tiny",
     name: "one reference",
-    kind: "image-to-video",
+    kind: "reference-to-video",
     licence: "oss",
-    accepts: ["keyframe"],
+    accepts: ["character"],
     max_references: MIN_REFERENCE_KIT - 1,
+    reference_field: "reference_images",
+    evidence: "assumed",
+    constraints: [],
     notes: "one image only",
     verified: false,
   };
   assertEquals(checkAdapterDefinition(tooSmall).some((p) => p.includes("below the smallest kit")), true);
+  // a keyframe-only adapter is a different shape and one image is its whole job
+  const keyframeOnly: Adapter = { ...tooSmall, id: "kf", accepts: ["keyframe"], max_references: 1 };
+  assertEquals(checkAdapterDefinition(keyframeOnly), []);
+});
+
+Deno.test("an undocumented claim of documentation is caught", () => {
+  const noSource: Adapter = { ...ADAPTERS[0], evidence: "documented", source: undefined };
+  assertEquals(checkAdapterDefinition(noSource).includes("claims to be documented but cites no source"), true);
+});
+
+Deno.test("a missing field name is a problem, because a schema rejects the wrong one", () => {
+  const nameless: Adapter = { ...ADAPTERS[0], reference_field: " " };
+  assertEquals(checkAdapterDefinition(nameless).some((p) => p.includes("field name")), true);
+});
+
+Deno.test("the fields the roster sends are the fields each endpoint validates", () => {
+  const byId = new Map(ADAPTERS.map((a) => [a.id, a]));
+  assertEquals(byId.get("wan-reference-to-video")?.reference_field, "reference_urls");
+  assertEquals(byId.get("seedance-2-reference")?.reference_field, "reference_images");
+  assertEquals(byId.get("kling-reference-to-video")?.reference_field, "image_urls");
+  assertEquals(byId.get("first-frame-image-to-video")?.reference_field, "first_frame_image");
+});
+
+Deno.test("what rests on inference is listed apart from what was read", () => {
+  const report = verificationReport();
+  assertEquals(report.documented.includes("wan-reference-to-video"), true);
+  assertEquals(report.assumed, ["hunyuan-custom-multi-subject"]);
 });
 
 Deno.test("an undeclared licence is a problem, not a detail", () => {

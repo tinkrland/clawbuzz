@@ -3,7 +3,7 @@ import { loadPersonaFile } from "../persona/loader.ts";
 import { loadPlaces, loadWardrobe } from "../tools/libraries.ts";
 import { planShot, SHOOT_LOCKED, shotDrift } from "../persona/shot.ts";
 import { characterBlock } from "../persona/consistency.ts";
-import { checkReferences, planGeneration, referencesForShot } from "../generation/adapters.ts";
+import { ADAPTERS, checkReferences, planGeneration, referencesForShot } from "../generation/adapters.ts";
 
 const persona = await loadPersonaFile("personas/example.persona.jsonc");
 const wardrobe = await loadWardrobe("example");
@@ -72,7 +72,7 @@ Deno.test("an adapter that cannot take the parts says so before it runs", () => 
   const shot = planShot(persona, libs, base);
   const refs = referencesForShot(shot, { characterImage: "assets/character/front.png" });
   const problems = checkReferences(
-    { id: "tiny", name: "too small", kind: "reference-to-video", licence: "x", accepts: ["character"], max_references: 1, notes: "", verified: false },
+    { id: "tiny", name: "too small", kind: "reference-to-video", licence: "x", accepts: ["character"], max_references: 1, reference_field: "reference_images", evidence: "assumed", constraints: [], notes: "", verified: false },
     refs,
   );
   assertEquals(problems.some((p) => p.includes("does not take a place_wide")), true);
@@ -81,24 +81,34 @@ Deno.test("an adapter that cannot take the parts says so before it runs", () => 
 
 Deno.test("image to video without a keyframe is refused", () => {
   const shot = planShot(persona, libs, base);
-  assertThrows(() => planGeneration(shot, "image-to-video", { characterImage: "assets/character/front.png" }), Error, "keyframe");
+  assertThrows(() => planGeneration(shot, "first-frame-image-to-video", { characterImage: "assets/character/front.png" }), Error, "keyframe");
 });
 
-Deno.test("four plates and a keyframe is one reference too many, and it says so", () => {
+Deno.test("more references than the endpoint takes is caught by count, before the call", () => {
+  const kling = ADAPTERS.find((a) => a.id === "kling-reference-to-video")!;
+  const refs = [
+    { role: "character" as const, uri: "assets/character/front.png" },
+    ...Array.from({ length: 5 }, (_, i) => ({ role: "place_wide" as const, uri: `assets/places/p${i}.png` })),
+  ];
+  const problems = checkReferences(kling, refs);
+  assertEquals(problems.some((p) => p.includes("ceiling is 4")), true);
+});
+
+Deno.test("a reference adapter refuses a keyframe it does not accept, rather than dropping it", () => {
   const shot = planShot(persona, libs, base);
   assertThrows(
-    () => planGeneration(shot, "multi-reference-video", {
+    () => planGeneration(shot, "wan-reference-to-video", {
       characterImage: "assets/character/front.png",
       keyframe: "assets/shots/mirror/keyframe.png",
     }),
     Error,
-    "ceiling is 4",
+    "does not take a keyframe",
   );
 });
 
 Deno.test("a full plan fits the adapter and carries the axis prompt unchanged", () => {
   const shot = planShot(persona, libs, { ...base, place_id: "car-interior" });
-  const plan = planGeneration(shot, "multi-reference-video", {
+  const plan = planGeneration(shot, "seedance-2.5-reference", {
     characterImage: "assets/character/front.png",
     keyframe: "assets/shots/car/keyframe.png",
   });

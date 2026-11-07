@@ -24,8 +24,20 @@ export function checkAdapterDefinition(adapter: Adapter): string[] {
   if (!adapter.accepts.includes("character") && !adapter.accepts.includes("keyframe")) {
     problems.push("accepts neither a character reference nor a keyframe, so identity has no carrier");
   }
-  if (adapter.max_references < MIN_REFERENCE_KIT) {
-    problems.push(`ceiling ${adapter.max_references} is below the smallest kit (${MIN_REFERENCE_KIT})`);
+  // a reference-taking adapter has to have room for her plus a room. one that
+  // only takes a keyframe is a different shape and only needs the one image.
+  if (adapter.accepts.includes("character")) {
+    if (adapter.max_references < MIN_REFERENCE_KIT) {
+      problems.push(`ceiling ${adapter.max_references} is below the smallest kit (${MIN_REFERENCE_KIT})`);
+    }
+  } else if (adapter.max_references < 1) {
+    problems.push("takes no image at all");
+  }
+  if (!adapter.reference_field.trim()) {
+    problems.push("no field name, and the field name is what a schema rejects");
+  }
+  if (adapter.evidence === "documented" && !/^https?:\/\//.test(adapter.source ?? "")) {
+    problems.push("claims to be documented but cites no source");
   }
   if (!adapter.licence.trim()) problems.push("licence not declared");
   if (!adapter.notes.trim()) problems.push("no note on what the adapter expects");
@@ -45,6 +57,10 @@ export interface VerificationReport {
   checks: AdapterCheck[];
   // adapters whose behaviour has never been observed: the honest headline
   unverified: string[];
+  // descriptions that rest on reading the endpoint's own schema
+  documented: string[];
+  // descriptions that rest on inference and have to be confirmed first
+  assumed: string[];
 }
 
 export function verificationReport(adapters: Adapter[] = ADAPTERS): VerificationReport {
@@ -53,5 +69,7 @@ export function verificationReport(adapters: Adapter[] = ADAPTERS): Verification
     ok: checks.every((c) => c.problems.length === 0),
     checks,
     unverified: checks.filter((c) => !c.verified).map((c) => c.adapter),
+    documented: adapters.filter((a) => a.evidence === "documented").map((a) => a.id),
+    assumed: adapters.filter((a) => a.evidence === "assumed").map((a) => a.id),
   };
 }

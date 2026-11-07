@@ -163,14 +163,31 @@ character reference + place plates + axis prompt  ->  reference to video  ->  cl
 
 this is the 2026 practice, not an invention: reference kits, several wide plates per location reused as structure, wardrobe treated as its own asset.
 
-## what an adapter check can say
+## the adapter roster, read from the endpoints
 
-`tools/verify-adapters.ts` checks the descriptions, not the models: does the
-adapter accept a role that can carry identity, is its reference ceiling at least
-the smallest real kit (the person plus one wide plate), is the licence written
-down. those are internal claims, and a violation is a bug.
+the first version of this file guessed. it named a "wan family class" of multi
+reference models, and Wan 2.2 is not one of them: Wan 2.2 is a single start
+frame model. the reference taking models are a different set, and each of them
+names its reference field differently, which is the detail that actually breaks
+a request:
 
-what it cannot say is whether the model behaves that way. so every adapter ships
-`verified: false` and the tool prints them under "not yet observed", because a
-model nobody has run is unproven rather than passing. the day one is run, its
-flag flips with the run recorded.
+| adapter | field | cap | note |
+| --- | --- | --- | --- |
+| WAN reference to video | `reference_urls` | 5 | slots shared between images and clips, at most three clips |
+| WAN 3.0 reference | `reference_image_urls` | 10 | prompt can point at a specific reference |
+| Seedance 2 reference | `reference_images` | 9 | rejects a request with no reference, so no accidental text-to-video |
+| Seedance 2.5 reference | `reference_images` | 30 | asset library scale: the whole plate set fits |
+| Kling reference to video | `image_urls` | 4 | images or clips, one mode per request |
+| MiniMax H3 reference | `reference_images` | 9 | references and first/last frame are separate modes |
+| single first frame | `first_frame_image` | 1 | the opening frame, not a subject reference |
+| HunyuanCustom (self-hosted) | assumed | 4 | open weights, every unknown is the operator's |
+
+each adapter says whether its description came from reading the endpoint's own
+schema (`documented`) or from inference (`assumed`), and a documented one
+without a source fails the check. the count is not the only constraint: the
+field name is what a schema validates, and a mode switch can make references and
+frames mutually exclusive.
+
+`tools/verify-adapters.ts` checks all of that, and still prints every adapter as
+"not yet observed", because none has been run here. a model nobody has run is
+unproven, not passing.
