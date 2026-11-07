@@ -39,6 +39,10 @@ export function checkAdapterDefinition(adapter: Adapter): string[] {
   if (adapter.evidence === "documented" && !/^https?:\/\//.test(adapter.source ?? "")) {
     problems.push("claims to be documented but cites no source");
   }
+  if (!adapter.provider.trim()) problems.push("no provider, and the field name belongs to a provider");
+  if (adapter.source_kind === "api-doc" && !adapter.endpoint) {
+    problems.push("claims a provider api reference but names no endpoint");
+  }
   if (!adapter.licence.trim()) problems.push("licence not declared");
   if (!adapter.notes.trim()) problems.push("no note on what the adapter expects");
   return problems;
@@ -61,6 +65,8 @@ export interface VerificationReport {
   documented: string[];
   // descriptions that rest on inference and have to be confirmed first
   assumed: string[];
+  // descriptions read from an aggregator page rather than the provider's own
+  catalog_sourced: string[];
 }
 
 export function verificationReport(adapters: Adapter[] = ADAPTERS): VerificationReport {
@@ -71,5 +77,6 @@ export function verificationReport(adapters: Adapter[] = ADAPTERS): Verification
     unverified: checks.filter((c) => !c.verified).map((c) => c.adapter),
     documented: adapters.filter((a) => a.evidence === "documented").map((a) => a.id),
     assumed: adapters.filter((a) => a.evidence === "assumed").map((a) => a.id),
+    catalog_sourced: adapters.filter((a) => a.source_kind === "catalog").map((a) => a.id),
   };
 }

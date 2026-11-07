@@ -72,7 +72,7 @@ Deno.test("an adapter that cannot take the parts says so before it runs", () => 
   const shot = planShot(persona, libs, base);
   const refs = referencesForShot(shot, { characterImage: "assets/character/front.png" });
   const problems = checkReferences(
-    { id: "tiny", name: "too small", kind: "reference-to-video", licence: "x", accepts: ["character"], max_references: 1, reference_field: "reference_images", evidence: "assumed", constraints: [], notes: "", verified: false },
+    { id: "tiny", name: "too small", kind: "reference-to-video", licence: "x", accepts: ["character"], max_references: 1, reference_field: "reference_images", evidence: "assumed", source_kind: "catalog", provider: "test", prompt_tags: false, constraints: [], notes: "", verified: false },
     refs,
   );
   assertEquals(problems.some((p) => p.includes("does not take a place_wide")), true);

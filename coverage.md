@@ -69,3 +69,4 @@ and whose mouth it is.
 | generation adapters (`generation/adapters.ts`) | designed | reference assembly and refusal logic tested; no model is called, no adapter verified |
 | adapter definition checks (`generation/verify.ts`) | working | identity carrier, kit ceiling, declared licence, honest unverified list; 5 tests |
 | adapter roster (`generation/adapters.ts`) | working | eight adapters with real field names and caps, evidence per adapter, assumed ones named; 80 tests on main |
+| adapter provider surfaces + `buildRequest` | working | field names owned by the provider, scalar vs array bodies, tagged prompts; 87 tests on main |

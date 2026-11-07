@@ -163,31 +163,39 @@ character reference + place plates + axis prompt  ->  reference to video  ->  cl
 
 this is the 2026 practice, not an invention: reference kits, several wide plates per location reused as structure, wardrobe treated as its own asset.
 
-## the adapter roster, read from the endpoints
+## a field name belongs to a provider, not to a model
 
-the first version of this file guessed. it named a "wan family class" of multi
-reference models, and Wan 2.2 is not one of them: Wan 2.2 is a single start
-frame model. the reference taking models are a different set, and each of them
-names its reference field differently, which is the detail that actually breaks
-a request:
+the roster used to describe models. a model does not validate a request; a
+provider's schema does, and two providers serving the same weights disagree
+about the field that carries the reference. one page settled it: a catalogue
+listed Seedance 2.0 references as `reference_images`, and EvoLink's own API
+reference for the same model takes `image_urls`, described there as the
+`reference_image` role, 0 to 9 items, with `video_urls` up to 3 and `audio_urls`
+up to 3, and a request carrying only audio rejected. So the adapter now names a
+provider, an endpoint and a model, and the field it declares is the one that
+provider validates.
 
-| adapter | field | cap | note |
-| --- | --- | --- | --- |
-| WAN reference to video | `reference_urls` | 5 | slots shared between images and clips, at most three clips |
-| WAN 3.0 reference | `reference_image_urls` | 10 | prompt can point at a specific reference |
-| Seedance 2 reference | `reference_images` | 9 | rejects a request with no reference, so no accidental text-to-video |
-| Seedance 2.5 reference | `reference_images` | 30 | asset library scale: the whole plate set fits |
-| Kling reference to video | `image_urls` | 4 | images or clips, one mode per request |
-| MiniMax H3 reference | `reference_images` | 9 | references and first/last frame are separate modes |
-| single first frame | `first_frame_image` | 1 | the opening frame, not a subject reference |
-| HunyuanCustom (self-hosted) | assumed | 4 | open weights, every unknown is the operator's |
+| adapter | provider | field | cap | source |
+| --- | --- | --- | --- | --- |
+| seedance-2-reference | EvoLink | `image_urls` | 9 | the provider's API reference |
+| WAN reference to video | Pixel Dojo | `reference_urls` | 5 | catalogue |
+| WAN 3.0 reference | Pixel Dojo | `reference_image_urls` | 10 | catalogue |
+| Seedance 2.5 reference | Pixel Dojo | `reference_images` | 30 | catalogue |
+| Kling reference to video | Pixel Dojo | `image_urls` | 4 | catalogue |
+| MiniMax H3 reference | Pixel Dojo | `reference_images` | 9 | catalogue |
+| single first frame | Pixel Dojo | `first_frame_image` | 1 | catalogue |
+| HunyuanCustom (self-hosted) | you | assumed | 4 | inference |
 
-each adapter says whether its description came from reading the endpoint's own
-schema (`documented`) or from inference (`assumed`), and a documented one
-without a source fails the check. the count is not the only constraint: the
-field name is what a schema validates, and a mode switch can make references and
-frames mutually exclusive.
+`buildRequest` turns a plan into the body, so the field name is exercised rather
+than recited: a reference surface gets an array, a first-frame surface gets one
+scalar url, and a provider that binds references by tag gets a line saying which
+image is which (`@image1 is the character`) instead of leaving it to array order.
+the Seedance 2.0 request comes out as `image_urls`, `model`, `prompt`, and
+whatever duration and quality were asked for.
 
-`tools/verify-adapters.ts` checks all of that, and still prints every adapter as
-"not yet observed", because none has been run here. a model nobody has run is
-unproven, not passing.
+the catalogue-sourced ones are printed as exactly that. they are one step further
+from the schema, and the tool says so before anyone wires one up.
+
+`tools/verify-adapters.ts` checks the provider, the field, the endpoint when a
+source claims to be an API reference, and the identity carrier. it still ends
+with every adapter "not yet observed", because none has been run.
