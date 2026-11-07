@@ -15,6 +15,7 @@ import {
   type RegisterSpec,
   type SurfaceName,
 } from "./schema.ts";
+import { crewProblems } from "./crew.ts";
 
 // strip // and /* */ comments plus trailing commas, leaving string
 // content byte-identical. a hand-written manifest may comment anything
@@ -252,6 +253,11 @@ export function validatePersona(input: unknown): ValidationResult {
     surfaces: (m.surfaces as SurfaceName[]).slice(),
     cadence: m.cadence ?? {},
   };
+  // the crew is validated last: it depends on which surfaces were enabled,
+  // so the surface checks must have passed first.
+  errors.push(...crewProblems(manifest));
+
+  if (errors.length) return { ok: false, errors };
   return { ok: true, errors: [], manifest };
 }
 

@@ -47,3 +47,15 @@ branches sounding like one person instead of seven contractors sharing a logo.
 tts's named cues. it is ported from the prixie context branch, where the face
 and the voice both read one file so they could not drift. here the same file
 serves calls, streams, clips, narration and podcasts.
+
+## crew.ts, the operators
+
+`crew.ts` is the answer to "one persona, but who is actually doing this job".
+a persona may name an operator per surface in `crew`, and the module composes
+that operator's brief as identity plus post. identity lines are byte-identical
+across every vertical; the role, focus, playbooks, autonomy and escalation are
+per vertical. a crew member can narrow a register and name where it escalates,
+and cannot touch the name, the promise, the never list or the disclosure.
+
+`crewRoster()` is who is on shift. `crewFor()` resolves one vertical, with a
+sensible default post for a vertical the manifest never hired for.
