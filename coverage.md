@@ -70,3 +70,4 @@ and whose mouth it is.
 | adapter definition checks (`generation/verify.ts`) | working | identity carrier, kit ceiling, declared licence, honest unverified list; 5 tests |
 | adapter roster (`generation/adapters.ts`) | working | eight adapters with real field names and caps, evidence per adapter, assumed ones named; 80 tests on main |
 | adapter provider surfaces + `buildRequest` | working | field names owned by the provider, scalar vs array bodies, tagged prompts; 87 tests on main |
+| run path + observation ledger (`tools/run-frame.ts`, `generation/observations.ts`) | working | dry run prints and records nothing, live run records only an accepted status, report splits observed from unproven; 92 tests on main |

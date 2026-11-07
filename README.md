@@ -199,3 +199,17 @@ from the schema, and the tool says so before anyone wires one up.
 `tools/verify-adapters.ts` checks the provider, the field, the endpoint when a
 source claims to be an API reference, and the identity carrier. it still ends
 with every adapter "not yet observed", because none has been run.
+
+## closing the unproven gap without pretending
+
+`tools/run-frame.ts` plans a real shot, builds the body, and either prints it or
+sends it. Without `--live` it prints and says plainly that nothing was sent and
+nothing was recorded. With `--live` it needs the provider's key in the environment
+under that provider's documented name (`EVOLINK_API_KEY`, `PIXELDOJO_API_KEY`),
+posts the body, and on an accepted response writes `generation/observations/<adapter>.json`.
+
+That ledger is what moves an adapter from unproven to observed, and it is the only
+thing that can. A 400 is not recorded, because a rejected body is evidence the
+field name is wrong, not evidence it works. `verify-adapters.ts` prints observed
+adapters separately and keeps the rest under "not yet observed", so the report
+keeps telling the truth in both directions.
